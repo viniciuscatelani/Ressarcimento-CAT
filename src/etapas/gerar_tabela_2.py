@@ -541,7 +541,7 @@ if cod_items_with_multiple_values.shape[0] > 0:
                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
     sys.exit()
 
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01') & (tabela_2['DATA'] <= '2020-12-31')]
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM',
                     'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT','VL_CONFR_0', 'COD_LEGAL',
                     'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',

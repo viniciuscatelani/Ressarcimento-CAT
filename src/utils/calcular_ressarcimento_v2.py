@@ -63,12 +63,12 @@ def calcular_ressarcimento(tabela_2):
     cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])) & ((ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
 
     ficha_3['ICMS_TOT'] = np.where(cond_1 | cond_2 , 
-                                ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100) * ficha_3['MVA'] * 0.8,
+                                (ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100)) * (ficha_3['MVA'] + 1),
                                 ficha_3['ICMS_TOT'])
-    
-    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 1202, 2102])) | (ficha_3['IND_OPER'] == 1),
-                                   np.nan,
-                                   ficha_3['ICMS_TOT'])
+
+    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 1202, 2102, 2202])) | (ficha_3['IND_OPER'] == 1),
+                                    np.nan,
+                                    ficha_3['ICMS_TOT'])
 
     ficha_3['Valor ICMS Operação'] = np.where((ficha_3['CFOP'].astype(float) == 1403) & (ficha_3['Valor ICMS Operação'].astype(float) == 0),
                                             (ficha_3['ALIQUOTA'].astype(float)/ 100) * ficha_3['VALOR'].astype(float),
@@ -137,7 +137,7 @@ def calcular_ressarcimento(tabela_2):
 
     produtos_somente_saida = tabela_2.groupby('COD_ITEM')['IND_OPER'].all()
     produtos_somente_saida = produtos_somente_saida[produtos_somente_saida == True].index
-    prods_icms_0 = data[(data['QTD_INI'] != 0) & ((data['ICMS_INI'] == 0) | (data['ICMS_OP_INI'] == 0))]
+    prods_icms_0 = data[(data['QTD_INI'] != 0) & (((data['ICMS_INI'] == 0) | (data['ICMS_INI'].isnull())) | ((data['ICMS_OP_INI'] == 0) | (data['ICMS_OP_INI'].isnull())))]
     for produto in list(produtos_somente_saida) + list(prods_icms_0['COD_ITEM'].unique()) + list(prods_icms_0['COD_ITEM'].unique()):
     # for produto in data['COD_ITEM'].unique():
     # Executa a consulta para obter os valores mva_antes e mva_depois
@@ -146,7 +146,6 @@ def calcular_ressarcimento(tabela_2):
             mva = float(pd.read_sql_query(query, connection).dropna(axis=1).iloc[0,0])
         except:
             mva = 0
-        
         # Calcula o lucro e a quantidade total
         lucro = sum(tabela_2[(tabela_2['COD_ITEM'] == produto) & (tabela_2['IND_OPER'] == 1)]['VALOR'])
         tot_qtde = sum(tabela_2[(tabela_2['COD_ITEM'] == produto) & (tabela_2['IND_OPER'] == 1)]['QTD_CAT'])
