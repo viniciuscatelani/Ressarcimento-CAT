@@ -529,7 +529,7 @@ tabela_2['CHECAGEM'] = (tabela_2['QTD_CAT']/tabela_2['QTD_NOTA']).round(3)
 
 # Geração de tabela para checagem de erro em fator de conversão
 
-pivot_table = tabela_2[(tabela_2['IND_OPER'] == 0) & (~tabela_2['CHV_DOC'].str.slice(6,20).isin(cnpjs))].pivot_table(index=['COD_ITEM', 'UNIDADE'], values='CHECAGEM', aggfunc='nunique').reset_index()
+pivot_table = tabela_2[(tabela_2['IND_OPER'] == 0) & (~tabela_2['CHV_DOC'].str.slice(6,20).isin(cnpjs)) & (~tabela_2['CFOP'].astype(float).isin([1202, 2202, 1411,2411]))].pivot_table(index=['COD_ITEM', 'UNIDADE'], values='CHECAGEM', aggfunc='nunique').reset_index()
 
 # Checagem de erro em fator de conversão
 
@@ -537,11 +537,11 @@ cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_I
 if cod_items_with_multiple_values.shape[0] > 0:
     print('Erro encontrado: Fator de conversão errado, favor verificar')
     cods = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM'].values
-    salvar_dataframe_no_s3(tabela_2[tabela_2['COD_ITEM'].isin(cods)], bucket_name=bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/cods_a verificar.xlsx', file_type='xlsx')
+    salvar_dataframe_no_s3(tabela_2[(tabela_2['COD_ITEM'].isin(cods)) & (tabela_2['IND_OPER'] == 0)], bucket_name=bucket_name,
+                           s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
     sys.exit()
 
-tabela_2 = tabela_2[tabela_2['DATA'] >= '2020-01-01']
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01') & (tabela_2['DATA'] <= '2020-12-31')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM',
                     'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT','VL_CONFR_0', 'COD_LEGAL',
                     'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
