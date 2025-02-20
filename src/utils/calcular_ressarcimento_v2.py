@@ -59,10 +59,16 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['ALIQUOTA'] = ficha_3['ALIQUOTA'].astype(str).replace('-', np.nan).astype(float)
     ficha_3['MVA'] = ficha_3['MVA'].astype(str).replace('-', np.nan).replace('None', np.nan).astype(float)
 
+    cond_1 = ((ficha_3['CST'].astype(float) == 60) & ((ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
+    cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])) & ((ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
 
-    ficha_3['ICMS_TOT'] = np.where(((ficha_3['CST'].astype(float) == 60) & (ficha_3['ICMS_TOT'] == 0)) | (ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])), 
+    ficha_3['ICMS_TOT'] = np.where(cond_1 | cond_2 , 
                                 ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100) * ficha_3['MVA'] * 0.8,
                                 ficha_3['ICMS_TOT'])
+    
+    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 1202, 2102])) | (ficha_3['IND_OPER'] == 1),
+                                   np.nan,
+                                   ficha_3['ICMS_TOT'])
 
     ficha_3['Valor ICMS Operação'] = np.where((ficha_3['CFOP'].astype(float) == 1403) & (ficha_3['Valor ICMS Operação'].astype(float) == 0),
                                             (ficha_3['ALIQUOTA'].astype(float)/ 100) * ficha_3['VALOR'].astype(float),
@@ -253,7 +259,7 @@ def calcular_ressarcimento(tabela_2):
     
     mask = ficha_3['QTD_ent1_devolv_ent'] > 0
 
-    ficha_3['ICMS_TOT_ent_unit'] = np.where(mask, ficha_3['ICMS_TOT'] / ficha_3['QTD_ent1_devolv_ent'], 0)
+    ficha_3['ICMS_TOT_ent_unit'] = np.where(mask, ficha_3['ICMS_TOT'].fillna(0) / ficha_3['QTD_ent1_devolv_ent'], 0)
     
     ficha_3['ULT_ICMS_TOT_ent_unit'] = np.nan
 
@@ -364,7 +370,10 @@ def calcular_ressarcimento(tabela_2):
                 if (row['QTD_ent1_devolv_ent'] < 0) & (row['QTD_CAT'] == row['QTD_INI']) :
                     icms_tot_1_int.append(-row['ICMS_INI'])
                 else:
-                    icms_tot_1_int.append(row['ICMS_TOT'])
+                    if pd.isna(row['ICMS_TOT']):
+                        icms_tot_1_int.append(0)
+                    else:
+                        icms_tot_1_int.append(row['ICMS_TOT']) 
             else:
                 if row['QTD_ent1_devolv_ent'] < 0:
                     if (qtd_cat[i] == qtd_saldo[i-1]):
@@ -372,7 +381,10 @@ def calcular_ressarcimento(tabela_2):
                     else:
                         icms_tot_1_int.append(max(row['QTD_ent1_devolv_ent'] * row['ULT_ICMS_TOT_ent_unit'], -1*icms_tot_saldo_int[i-1]))
                 else:
-                    icms_tot_1_int.append(row['ICMS_TOT']) 
+                    if pd.isna(row['ICMS_TOT']):
+                        icms_tot_1_int.append(0)
+                    else:
+                        icms_tot_1_int.append(row['ICMS_TOT']) 
 
         # ICMS_TOT_SALDO
             if i == 0:

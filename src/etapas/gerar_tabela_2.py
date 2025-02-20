@@ -354,8 +354,7 @@ tabela_2['ALIQUOTA'] = tabela_2['ALIQUOTA'].astype(str).str.replace(r'\.0$','', 
 
 # Preenchimento da coluna CEST
 
-tabela_2['CEST'] = np.where(df['cest_y'].notnull(), df['cest_y'],
-                            np.where(df['Código CEST'].notnull(), df['Código CEST'], df['cest_x']))
+tabela_2['CEST'] = df['cest_y']                        
 
 # Preenchimento da coluna Entr_PCAT
 
