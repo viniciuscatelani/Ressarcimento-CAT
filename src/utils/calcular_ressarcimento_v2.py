@@ -63,16 +63,23 @@ def calcular_ressarcimento(tabela_2):
     cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])) & ((ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
 
     ficha_3['ICMS_TOT'] = np.where(cond_1 | cond_2 , 
-                                (ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100)) * (ficha_3['MVA'] + 1),
+                                ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100) * ficha_3['MVA'] * 0.8,
                                 ficha_3['ICMS_TOT'])
 
-    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 1202, 2102, 2202])) | (ficha_3['IND_OPER'] == 1),
+    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 1202, 2102])) | (ficha_3['IND_OPER'] == 1),
                                     np.nan,
                                     ficha_3['ICMS_TOT'])
 
-    ficha_3['Valor ICMS Operação'] = np.where((ficha_3['CFOP'].astype(float) == 1403) & (ficha_3['Valor ICMS Operação'].astype(float) == 0),
+    cond_1 = ((ficha_3['CST'].astype(float) == 60) & ((ficha_3['Valor ICMS Operação'] == 0) | (ficha_3['Valor ICMS Operação'].isnull())))
+    cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])) & ((ficha_3['Valor ICMS Operação'] == 0) | (ficha_3['Valor ICMS Operação'].isnull())))
+
+    ficha_3['Valor ICMS Operação'] = np.where(cond_1 | cond_2,
                                             (ficha_3['ALIQUOTA'].astype(float)/ 100) * ficha_3['VALOR'].astype(float),
                                             ficha_3['Valor ICMS Operação'])
+
+    ficha_3['Valor ICMS Operação'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 2102])) | ((ficha_3['CFOP'].astype(float).isin([1202, 2202])) & (ficha_3['CST'] != 60)),
+                                    np.nan,
+                                    ficha_3['Valor ICMS Operação'])
 
     data = ficha_3[['COD_ITEM', 'DATA', 'QTD_CAT', 'IND_OPER']]
 
@@ -146,6 +153,7 @@ def calcular_ressarcimento(tabela_2):
             mva = float(pd.read_sql_query(query, connection).dropna(axis=1).iloc[0,0])
         except:
             mva = 0
+        # print('MVA: ', mva)
         # Calcula o lucro e a quantidade total
         lucro = sum(tabela_2[(tabela_2['COD_ITEM'] == produto) & (tabela_2['IND_OPER'] == 1)]['VALOR'])
         tot_qtde = sum(tabela_2[(tabela_2['COD_ITEM'] == produto) & (tabela_2['IND_OPER'] == 1)]['QTD_CAT'])
@@ -155,10 +163,14 @@ def calcular_ressarcimento(tabela_2):
         try:
             # Calcula o valor unitário, base ST estimada e ICMS
             valor_unit = (lucro * 0.8) / tot_qtde
+            # print('Valor unitario: ', valor_unit)
             base_st_estimada = valor_unit + (valor_unit * mva)
+            # print('Base estimada: ', base_st_estimada)
             icms_op_unit = valor_unit * aliquota
             icms_suport_unit = base_st_estimada * aliquota
+            # print('Icms suportado unitario: ', icms_suport_unit)
             icms_inicial = icms_suport_unit * tot_qtde
+            # print('ICMS Inicial: ', icms_inicial)
 
         except:
             icms_inicial = 0
@@ -188,7 +200,7 @@ def calcular_ressarcimento(tabela_2):
     ficha_3 = ficha_3[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 
                         'SUB_TIPO', 'QTD_CAT', 'Valor ICMS Operação','CST', 'QTD_INI','ICMS_INI', 'ICMS_OP_INI',
                         'ALIQUOTA', 'FONTE', 'ICMS_TOT', 'VALOR']]
-    
+
     # Inicializa as colunas
     ficha_3['valor_op_fixo'] = 0
     ficha_3['qtd_fixa'] = 0
@@ -218,7 +230,10 @@ def calcular_ressarcimento(tabela_2):
             if i == 0:  # Primeira linha
                 if row['IND_OPER'] == 0:
                     # Calcular com valores acumulados
-                    num = row['valor_op_fixo'] + row['Valor ICMS Operação'] + row['ICMS_OP_INI']
+                    if pd.isna(row['Valor ICMS Operação']):
+                        num = row['valor_op_fixo'] + 0 + row['ICMS_OP_INI']
+                    else:
+                        num = row['valor_op_fixo'] + row['Valor ICMS Operação'] + row['ICMS_OP_INI']
                     den = row['qtd_fixa'] + row['QTD_CAT'] + row['QTD_INI']
                     valor_medio.append(num / den)
                 elif row['IND_OPER'] == 1:
@@ -229,7 +244,10 @@ def calcular_ressarcimento(tabela_2):
             else:  # Demais linhas
                 if row['IND_OPER'] == 0:
                     # Calcular com valores acumulados
-                    num = row['valor_op_fixo'] + row['Valor ICMS Operação'] + subset.iloc[0]['ICMS_OP_INI']
+                    if pd.isna(row['Valor ICMS Operação']):
+                        num = row['valor_op_fixo'] + 0 + row['ICMS_OP_INI']
+                    else:
+                        num = row['valor_op_fixo'] + row['Valor ICMS Operação'] + row['ICMS_OP_INI']
                     den = row['qtd_fixa'] + row['QTD_CAT'] + subset.iloc[0]['QTD_INI']
                     valor_medio.append(num / den)
                 elif row['IND_OPER'] == 1:
@@ -238,7 +256,7 @@ def calcular_ressarcimento(tabela_2):
 
     # Adiciona a coluna 'valor_medio' ao DataFrame e preenche valores ausentes
     ficha_3['valor_medio'] = valor_medio
-    ficha_3['valor_medio'] = ficha_3['valor_medio'].ffill()  # Preenche valores ausentes com o valor anterior
+    ficha_3['valor_medio'] = ficha_3['valor_medio'].ffill()
 
     # Cálculos finais
     ficha_3['COD_LEGAL'] = tabela_2['COD_LEGAL'].astype(float)
