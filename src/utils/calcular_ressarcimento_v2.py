@@ -29,9 +29,9 @@ def calcular_ressarcimento(tabela_2):
     
     '''
     # tabela_2 = tabela_2.drop('Unnamed: 0', axis=1)
+    tabela_2 = tabela_2[tabela_2.groupby('COD_ITEM')['IND_OPER'].transform(lambda x: not (x.nunique() == 1 and x.iloc[0] == 0))]
     tabela_2 = tabela_2.sort_values(by=['COD_ITEM', 'DATA', 'IND_OPER', 'SUB_TIPO'], 
                                 ascending=[True, True, True, True]).reset_index().drop('index', axis=1)
-
 
     tabela_2['QTD_CAT'] = tabela_2['QTD_CAT'].astype(float)
 
@@ -63,10 +63,10 @@ def calcular_ressarcimento(tabela_2):
     cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])) & ((ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
 
     ficha_3['ICMS_TOT'] = np.where(cond_1 | cond_2 , 
-                                ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100) * ficha_3['MVA'] * 0.8,
+                                (ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100)) * (ficha_3['MVA'] + 1),
                                 ficha_3['ICMS_TOT'])
 
-    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 1202, 2102])) | (ficha_3['IND_OPER'] == 1),
+    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 1202, 2102, 2202])) | (ficha_3['IND_OPER'] == 1),
                                     np.nan,
                                     ficha_3['ICMS_TOT'])
 
@@ -588,6 +588,10 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['Valor ICMS Operação'] = tabela_2['Valor ICMS Operação']
     ficha_3['CNPJ EMITENTE'] = tabela_2['CNPJ EMITENTE']
     
+    # condition_1 = (ficha_3['QTD_INI'] == 0) & (ficha_3['ICMS_INI'] == 0)
+    # condition_2 = (ficha_3['CFOP'].astype(float).isin([1403, 2403, 6404, 6404]))
+    # ficha_3 = ficha_3[~ficha_3['COD_ITEM'].isin(['109100', '109001', '1094100'])].reset_index().drop('index', axis=1)
+
     ficha_3 = ficha_3[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT',
                         'QTD_INI', 'ICMS_INI', 'QTD_ent1_devolv_ent', 'ICMS_TOT', 'ICMS_TOT_ent_unit',
                         'ULT_ICMS_TOT_ent_unit', 'ICMS_TOT_1', 'qtd_saida_1_devolv_saida', 'ICMS_SAIDA_UNI',

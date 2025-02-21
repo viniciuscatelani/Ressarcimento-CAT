@@ -51,7 +51,8 @@ gti = input('Precisa de GTI?: ')
 
 if gti.lower() == 'sim':
 
-    meta = 4000000
+    meta_ = input('Qual é o valor da meta de ressarcimento ?: ')
+    meta = float(meta_)
     if ficha_3['VLR_RESSARCIMENTO'].sum() < meta:
        top_prods = input('Qual o top de produtos para a conta?: ')
        ficha_3_final = gti_pra_cima(ficha_3, meta_ressarc=meta, top_prods=int(top_prods))

@@ -501,7 +501,7 @@ tabela_2['SUB_TIPO'] = tabela_2['SUB_TIPO'].astype(int)
 
 conditions = [
     tabela_2['CFOP'] == 5927,
-    tabela_2['CFOP'].isin([6102, 6404, 6108, 6117, 6152, 6409]),
+    tabela_2['CFOP'].isin([6102, 6404, 6108, 6117, 6152, 6409, 6403]),
     tabela_2['CFOP'] == 5409,
     (tabela_2['IND_OPER'] == 0) & (tabela_2['SUB_TIPO'] == 1),
     (tabela_2['IND_OPER'] == 1) & (tabela_2['SUB_TIPO'] == -1),
@@ -541,7 +541,8 @@ if cod_items_with_multiple_values.shape[0] > 0:
                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
     sys.exit()
 
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
+# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM',
                     'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT','VL_CONFR_0', 'COD_LEGAL',
                     'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
