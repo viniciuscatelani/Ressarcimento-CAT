@@ -47,6 +47,8 @@ def calcular_ressarcimento(tabela_2):
                                 ascending=[True, True, True, True])
 
     ficha_3['ICMS_TOT'] = tabela_2['ICMS_TOT'].astype(float)
+    ficha_3['ICMS_TOT_SAIDA'] = tabela_2['ICMS_TOT_SAIDA'].astype(float)
+
     ficha_3['VALOR'] = tabela_2['VALOR']
 
     ficha_3 = ficha_3.merge(produtos[['codigo_produto', 'mva_antes']], 
@@ -69,6 +71,10 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 1202, 2102, 2202])) | (ficha_3['IND_OPER'] == 1),
                                     np.nan,
                                     ficha_3['ICMS_TOT'])
+    
+    # ficha_3['ICMS_TOT_SAIDA'] = np.where((ficha_3['IND_OPER'] == 1) & (),
+    #                                      (ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100)) * (ficha_3['MVA'] + 1),
+    #                                      np.nan)
 
     cond_1 = ((ficha_3['CST'].astype(float) == 60) & ((ficha_3['Valor ICMS Operação'] == 0) | (ficha_3['Valor ICMS Operação'].isnull())))
     cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])) & ((ficha_3['Valor ICMS Operação'] == 0) | (ficha_3['Valor ICMS Operação'].isnull())))
@@ -81,7 +87,7 @@ def calcular_ressarcimento(tabela_2):
                                     np.nan,
                                     ficha_3['Valor ICMS Operação'])
 
-    data = ficha_3[['COD_ITEM', 'DATA', 'QTD_CAT', 'IND_OPER']]
+    data = ficha_3[['COD_ITEM', 'DATA', 'QTD_CAT', 'IND_OPER', 'CFOP']]
 
     # Transformação da coluna 'DATA' para o tipo correto
     data['DATA'] = pd.to_datetime(data['DATA'], format='%Y-%m-%d')
@@ -118,10 +124,10 @@ def calcular_ressarcimento(tabela_2):
     data['ICMS_TOT_0'] = ficha_3['ICMS_TOT']
     data['CST'] = ficha_3['CST']
     data['Valor ICMS Operação'] = ficha_3['Valor ICMS Operação']
-    data['VALOR_UNIT'] = np.where((data['SUB_TIPO'] == 1) & (data['IND_OPER'] == 0),
+    data['VALOR_UNIT'] = np.where((data['CFOP'].astype(float).isin([1403, 1411, 2411])),
                                     data['ICMS_TOT_0'].fillna(0) / data['QTD_CAT'],
                                     np.nan)
-    data['VALOR_OP_UNIT'] = np.where((data['SUB_TIPO'] == 1) & (data['IND_OPER'] == 0),
+    data['VALOR_OP_UNIT'] = np.where((data['CFOP'].astype(float).isin([1403, 1411, 2411])),
                                     data['Valor ICMS Operação'].fillna(0) / data['QTD_CAT'],
                                     np.nan)
 
@@ -131,9 +137,10 @@ def calcular_ressarcimento(tabela_2):
         'QTD_INI': 'first'
     })
 
+    val = np.random.random(size=len(grouped_data))
     # Cálculo vetorizado para icms_init
-    grouped_data['ICMS_INI'] = grouped_data['VALOR_UNIT'] * (1 - 0.3 * np.random.random(size=len(grouped_data))) * grouped_data['QTD_INI']
-    grouped_data['ICMS_OP_INI'] = grouped_data['VALOR_OP_UNIT'] * (1 - 0.3 * np.random.random(size=len(grouped_data))) * grouped_data['QTD_INI']
+    grouped_data['ICMS_INI'] = grouped_data['VALOR_UNIT'] * (1 - 0.3 * val) * grouped_data['QTD_INI']
+    grouped_data['ICMS_OP_INI'] = grouped_data['VALOR_OP_UNIT'] * (1 - 0.3 * val) * grouped_data['QTD_INI']
     data = data.merge(grouped_data[['ICMS_INI', 'ICMS_OP_INI']], how='left', left_on='COD_ITEM', right_index=True)
 
     mask = data.duplicated(subset='COD_ITEM', keep='first')
@@ -144,8 +151,8 @@ def calcular_ressarcimento(tabela_2):
 
     produtos_somente_saida = tabela_2.groupby('COD_ITEM')['IND_OPER'].all()
     produtos_somente_saida = produtos_somente_saida[produtos_somente_saida == True].index
-    prods_icms_0 = data[(data['QTD_INI'] != 0) & (((data['ICMS_INI'] == 0) | (data['ICMS_INI'].isnull())) | ((data['ICMS_OP_INI'] == 0) | (data['ICMS_OP_INI'].isnull())))]
-    for produto in list(produtos_somente_saida) + list(prods_icms_0['COD_ITEM'].unique()) + list(prods_icms_0['COD_ITEM'].unique()):
+    prods_icms_0 = data.drop_duplicates(subset='COD_ITEM', keep='first')[(data['QTD_INI'] != 0) & (((data['ICMS_INI'] == 0) | (data['ICMS_INI'].isnull())) | ((data['ICMS_OP_INI'] == 0) | (data['ICMS_OP_INI'].isnull())))]
+    for produto in list(produtos_somente_saida) + list(prods_icms_0['COD_ITEM'].unique()):
     # for produto in data['COD_ITEM'].unique():
     # Executa a consulta para obter os valores mva_antes e mva_depois
         query = f"SELECT mva_antes, mva_depois FROM produtos WHERE codigo_produto = '{produto}'"
@@ -155,9 +162,9 @@ def calcular_ressarcimento(tabela_2):
             mva = 0
         # print('MVA: ', mva)
         # Calcula o lucro e a quantidade total
-        lucro = sum(tabela_2[(tabela_2['COD_ITEM'] == produto) & (tabela_2['IND_OPER'] == 1)]['VALOR'])
-        tot_qtde = sum(tabela_2[(tabela_2['COD_ITEM'] == produto) & (tabela_2['IND_OPER'] == 1)]['QTD_CAT'])
-        aliquota = tabela_2[tabela_2['COD_ITEM'] == produto]['ALIQUOTA'].values[0] / 100
+        lucro = sum(ficha_3[(ficha_3['COD_ITEM'] == produto) & (ficha_3['IND_OPER'] == 1)]['ICMS_TOT_SAIDA'])
+        tot_qtde = sum(ficha_3[(ficha_3['COD_ITEM'] == produto) & (ficha_3['IND_OPER'] == 1)]['QTD_CAT'])
+        aliquota = ficha_3[ficha_3['COD_ITEM'] == produto]['ALIQUOTA'].values[0] / 100
 
         
         try:
@@ -199,7 +206,7 @@ def calcular_ressarcimento(tabela_2):
 
     ficha_3 = ficha_3[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 
                         'SUB_TIPO', 'QTD_CAT', 'Valor ICMS Operação','CST', 'QTD_INI','ICMS_INI', 'ICMS_OP_INI',
-                        'ALIQUOTA', 'FONTE', 'ICMS_TOT', 'VALOR']]
+                        'ALIQUOTA', 'FONTE', 'ICMS_TOT','ICMS_TOT_SAIDA', 'VALOR']]
 
     # Inicializa as colunas
     ficha_3['valor_op_fixo'] = 0
@@ -217,7 +224,10 @@ def calcular_ressarcimento(tabela_2):
                 ficha_3.loc[i, 'valor_op_fixo'] = acum_val
                 ficha_3.loc[i, 'qtd_fixa'] = acum_qtd
 
-                acum_val += row['Valor ICMS Operação']
+                if pd.isna(row['Valor ICMS Operação']):
+                    acum_val += 0
+                else:
+                    acum_val += row['Valor ICMS Operação']
                 acum_qtd += row['QTD_CAT']
 
     # Cálculo do valor médio
@@ -556,8 +566,8 @@ def calcular_ressarcimento(tabela_2):
 
     ficha_3['COD_LEGAL'] = np.where((ficha_3['COD_LEGAL'] == 1) & (ficha_3['VLR_RESSARCIMENTO'] != 0) & (ficha_3['ALIQUOTA'] != 0), 1, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5404, 5403, 5401]), 1, ficha_3['COD_LEGAL'])
-    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1411, 5409]), 0, ficha_3['COD_LEGAL'])
-    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1403, 1409, 5411]), np.nan, ficha_3['COD_LEGAL'])
+    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5409]), 0, ficha_3['COD_LEGAL'])
+    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1403, 1409, 1102, 2102, 1202, 2202]), np.nan, ficha_3['COD_LEGAL'])
     # ficha_3.loc[pd.isna(ficha_3['COD_LEGAL']), 'COD_LEGAL_PCAT'] = np.nan
 
     ficha_3['VLR_CONFR_PCAT'] = np.where(ficha_3['COD_LEGAL'].isin([1, 3]), 
@@ -585,15 +595,14 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['Valor Complementar'] = tabela_2['Valor Complementar']
     ficha_3['vBCST'] = tabela_2['vBCST']
     ficha_3['Valor ICMS Substituição Tributária'] = tabela_2['Valor ICMS Substituição Tributária']
-    ficha_3['Valor ICMS Operação'] = tabela_2['Valor ICMS Operação']
     ficha_3['CNPJ EMITENTE'] = tabela_2['CNPJ EMITENTE']
     
     # condition_1 = (ficha_3['QTD_INI'] == 0) & (ficha_3['ICMS_INI'] == 0)
     # condition_2 = (ficha_3['CFOP'].astype(float).isin([1403, 2403, 6404, 6404]))
-    # ficha_3 = ficha_3[~ficha_3['COD_ITEM'].isin(['109100', '109001', '1094100'])].reset_index().drop('index', axis=1)
+    ficha_3 = ficha_3[~ficha_3['COD_ITEM'].isin(['109100', '109001', '1094100'])].reset_index().drop('index', axis=1)
 
     ficha_3 = ficha_3[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT',
-                        'QTD_INI', 'ICMS_INI', 'QTD_ent1_devolv_ent', 'ICMS_TOT', 'ICMS_TOT_ent_unit',
+                        'QTD_INI', 'ICMS_INI', 'ICMS_OP_INI', 'QTD_ent1_devolv_ent', 'ICMS_TOT','ICMS_TOT_SAIDA', 'ICMS_TOT_ent_unit',
                         'ULT_ICMS_TOT_ent_unit', 'ICMS_TOT_1', 'qtd_saida_1_devolv_saida', 'ICMS_SAIDA_UNI',
                         'ULT_ICMS_SAIDA_UNI', 'ICMS_SAIDA', 'ICMS_TOT_PCAT', 'VLR_CONF_0', 'VLR_CONFR_UNIT',
                         'ULT_VLR_CONFR_UNIT', 'VLR_CONFR_1', 'QTD_SALDO', 'ICMS_TOT_SALDO', 'VLR_RESSARCIMENTO',

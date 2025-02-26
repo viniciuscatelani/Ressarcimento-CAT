@@ -228,9 +228,10 @@ merged_novo['Produto'] = np.where((merged_novo['Tipo'] == 'entrada') & (~merged_
                                merged_novo['codigo_produto'], merged_novo['Código Produto ou Serviço'])
 merged_novo['Produto'] = merged_novo['Produto'].astype(str)
 
-df_merged = pd.merge(merged_novo, produtos[['codigo_produto', 'icms', 'cest']],
+df_merged = pd.merge(merged_novo, produtos[['codigo_produto', 'icms', 'cest', 'mva_antes']],
                     left_on=['Produto'], right_on=['codigo_produto'],
                     how='left')
+
 
 # Checagem de duplicação de chave-item
 
@@ -296,6 +297,8 @@ tabela_2['COD_ITEM'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso N
                                 df['Produto'],
                                 tabela_2['COD_ITEM'])
 
+tabela_2['MVA'] = df_merged['mva_antes'].astype(str).replace('-', np.nan).replace('None', np.nan).astype(float)
+
 
 # Preenchimento das colunas QTD_NOTA, QTD_CAT e QTD_EFD
 
@@ -350,7 +353,7 @@ tabela_2['N C M'] = np.where(df['N C M'].notnull(),
 # Preenchimento da coluna ALIQUOTA
 
 tabela_2['ALIQUOTA'] = df['icms']
-tabela_2['ALIQUOTA'] = tabela_2['ALIQUOTA'].astype(str).str.replace(r'\.0$','', regex=True)
+tabela_2['ALIQUOTA'] = tabela_2['ALIQUOTA'].astype(str).str.replace(r'\.0$','', regex=True).astype(str).replace('-', np.nan).astype(float)
 
 # Preenchimento da coluna CEST
 
@@ -389,7 +392,7 @@ tabela_2['CNPJ DESTINATARIO'] = df['Número CNPJ Destinatário']
 tabela_2['IND_OPER'] = df['IND_OPER']
 
 # Preenchimento da coluna VALOR
-tabela_2['VALOR'] = df['Valor Produto ou Serviço']
+tabela_2['VALOR'] = df['Valor Produto ou Serviço'].astype(str).replace('-', np.nan).astype(float)
 
 # Definição de mais colunas
 
@@ -456,11 +459,20 @@ tabela_2['ICMS_TOT'] = np.where(
     np.nan  # Valor a ser atribuído quando a condição principal não for atendida
 )
 
-tabela_2['ICMS_TOT'] = np.where(tabela_2['CFOP'].isin([1102, 2102]), np.nan, tabela_2['ICMS_TOT'])
+cond_1 = tabela_2['CFOP'].isin([1102, 2102])
+cond_2 = (tabela_2['CST'] != 60) & (tabela_2['CFOP'].isin([1202, 2202]))
+
+tabela_2['ICMS_TOT'] = np.where(cond_1 | cond_2, 
+                                np.nan, 
+                                tabela_2['ICMS_TOT'])
 
 tabela_2['Valor ICMS Operação'] = np.where(tabela_2['Valor ICMS Operação'] == 0,
                                            tabela_2['Valor ICMS Substituto'],
                                            tabela_2['Valor ICMS Operação'])
+
+tabela_2['ICMS_TOT_SAIDA'] = np.where((tabela_2['IND_OPER'] == 1),
+                                         (tabela_2['VALOR'].astype(float) * (tabela_2['ALIQUOTA'].astype(float) / 100)) * (tabela_2['MVA'].astype(float) + 1),
+                                         np.nan)
 
 tabela_2 = tabela_2[tabela_2['Entr_PCAT'] == 1]
 
@@ -500,18 +512,24 @@ tabela_2['IND_OPER'] = tabela_2['IND_OPER'].astype(int)
 tabela_2['SUB_TIPO'] = tabela_2['SUB_TIPO'].astype(int)
 
 conditions = [
-    tabela_2['CFOP'] == 5927,
-    tabela_2['CFOP'].isin([6102, 6404, 6108, 6117, 6152, 6409, 6403]),
-    tabela_2['CFOP'] == 5409,
-    (tabela_2['IND_OPER'] == 0) & (tabela_2['SUB_TIPO'] == 1),
-    (tabela_2['IND_OPER'] == 1) & (tabela_2['SUB_TIPO'] == -1),
-    tabela_2['ALIQUOTA'].isnull()
+    (tabela_2['CST'] == 40) & (tabela_2['IND_OPER'] == 1),
+    tabela_2['CFOP'].isin([6102, 6152, 6404, 6409, 6108, 6117]),
+    tabela_2['CFOP'].isin([5102, 5152, 5201, 5202, 5210, 5409,
+                           5410, 5411, 5413, 5556, 5910, 5922,
+                           5949, 6202, 6411, 6922, 6403, 6910]),
+    (tabela_2['CFOP'] == 5927),
+    (tabela_2['CFOP'] == 5405),
+    (tabela_2['CFOP'].isin([5117, 5120, 5929])) & (tabela_2['CST'] == 60),
+    tabela_2['ALIQUOTA'].isnull(),
+    (tabela_2['CFOP'].isin([1102, 1411, 2102, 2202, 1403, 2411, 1202, 2403, 1949]))
 ]
 
-choices = [2, 4, 0, np.nan, np.nan, 0]
+
+
+choices = [3, 4, 0, 2, 1, 1, 0, np.nan]
 
 # If none of the conditions are met, the default choice is 1
-default_choice = 1
+default_choice = 0
 
 # Use numpy.select to set values for 'COD_LEGAL'
 tabela_2['COD_LEGAL'] = np.select(conditions, choices, default=default_choice)
@@ -541,10 +559,11 @@ if cod_items_with_multiple_values.shape[0] > 0:
                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
     sys.exit()
 
-# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
-tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM',
-                    'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT','VL_CONFR_0', 'COD_LEGAL',
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2024-01-01') & (tabela_2['DATA'] <= '2024-12-31')]
+data = tabela_2['DATA'].astype(str).iloc[0][:4]
+# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
+tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',
+                    'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT', 'ICMS_TOT_SAIDA', 'VL_CONFR_0', 'COD_LEGAL',
                     'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
                     'Valor Complementar', 'Valor ICMS Substituição Tributária', 'Valor ICMS Operação',
                     'Valor ICMS ST Retido', 'Valor ICMS Substituto', 'CST',

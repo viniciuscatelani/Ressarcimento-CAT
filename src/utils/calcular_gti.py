@@ -34,24 +34,46 @@ def gti_pra_cima(ficha_3, meta_ressarc, top_prods):
     
     tabela_2_nova = ficha_3.merge(incr_max_unit[['COD_ITEM', 'Incremento maximo unitario']], on='COD_ITEM', how='left')
     tabela_2_nova['Incremento maximo unitario'] = np.where(tabela_2_nova['ICMS_TOT'].fillna(0) == 0,
-                                                 0,
-                                                 tabela_2_nova['Incremento maximo unitario'])
-    
+                                                    0,
+                                                    tabela_2_nova['Incremento maximo unitario'])
+
     tabela_2_nova['Incremento maximo unitario'] = tabela_2_nova['Incremento maximo unitario'].fillna(0)
-    
+
     tabela_2_nova['ICMS_TOT_FINAL'] = np.where(tabela_2_nova['ICMS_TOT'].fillna(0) != 0,
-                                     tabela_2_nova['ICMS_TOT'] + (tabela_2_nova['Incremento maximo unitario']*fator)*tabela_2_nova['QTD_CAT'],
-                                     0)
-    
+                                        tabela_2_nova['ICMS_TOT'] * (1 + fator),
+                                        0)
+
+    tabela_2_nova['VALOR_ICMS_OP_FINAL'] = np.where(tabela_2_nova['Valor ICMS Operação'].fillna(0) != 0,
+                                        tabela_2_nova['Valor ICMS Operação'] * (1 + fator),
+                                        0)
+
+    tabela_2_nova['ICMS_TOT_SAIDA_FINAL'] = np.where(tabela_2_nova['ICMS_TOT_SAIDA'].fillna(0) != 0,
+                                        tabela_2_nova['ICMS_TOT_SAIDA'] * (1 + fator),
+                                        0)
+
     df_final = ficha_3.copy()
     df_final = df_final.sort_values(by=['COD_ITEM', 'DATA', 'IND_OPER', 'SUB_TIPO'], 
-                                   ascending=[True, True, True, True]).reset_index().drop(['index'], axis=1)                                      
-    
+                                    ascending=[True, True, True, True]).reset_index().drop(['index'], axis=1)                                      
+
     df_final['ICMS_TOT_FINAL'] = tabela_2_nova['ICMS_TOT_FINAL']
+    df_final['VALOR_ICMS_OP_FINAL'] = tabela_2_nova['VALOR_ICMS_OP_FINAL']
+    df_final['ICMS_TOT_SAIDA_FINAL'] = tabela_2_nova['ICMS_TOT_SAIDA_FINAL']
+
     df_final.rename(columns={'ICMS_TOT': 'ICMS_TOT_ORIG',
-                             'ICMS_TOT_FINAL': 'ICMS_TOT',
-                             'VLR_CONF_0': 'VL_CONFR_0'
+                                'ICMS_TOT_FINAL': 'ICMS_TOT',
+                                'ICMS_TOT_SAIDA': 'ICMS_TOT_SAIDA_ORIG',
+                                'ICMS_TOT_SAIDA_FINAL': 'ICMS_TOT_SAIDA',
+                                'VLR_CONF_0': 'VL_CONFR_0',
+                                'Valor ICMS Operação': 'Valor ICMS Operação Orig',
+                                'VALOR_ICMS_OP_FINAL': 'Valor ICMS Operação'
                             }, inplace=True)
+
+    df_final = df_final[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT',
+                            'ICMS_TOT','COD_LEGAL', 'VL_CONFR_0', 'ICMS_TOT_SAIDA',
+                            'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
+                            'Valor Complementar', 'Valor ICMS Substituição Tributária', 'Valor ICMS Operação',
+                            'CNPJ EMITENTE', 'vBCST', 'CST', 'Valor ICMS Operação Orig', 'ICMS_TOT_ORIG','ICMS_TOT_SAIDA_ORIG',
+                            'FONTE']]
     
 
     
@@ -83,6 +105,7 @@ def gti_pra_cima(ficha_3, meta_ressarc, top_prods):
     incr_max_unit_final = incr_max_unit_final.reset_index()
     
     ficha_3_final['ICMS_TOT_ORIG'] = df_final['ICMS_TOT_ORIG']
+    ficha_3_final['ICMS_TOT_SAIDA_ORIG'] = df_final['ICMS_TOT_SAIDA_ORIG']
     ficha_3_final = ficha_3_final.merge(incr_max_unit_final[['COD_ITEM', 'Incremento maximo unitario']], on='COD_ITEM', how='left')
     ficha_3_final['Incremento maximo unitario'] = np.where(ficha_3_final['ICMS_TOT_ORIG'].fillna(0) == 0,
                                                  0,
@@ -90,17 +113,40 @@ def gti_pra_cima(ficha_3, meta_ressarc, top_prods):
     ficha_3_final['Incremento maximo unitario'] = ficha_3_final['Incremento maximo unitario'].fillna(0)
     
     ficha_3_final['ICMS_TOT_FINAL'] = np.where(ficha_3_final['ICMS_TOT_ORIG'].fillna(0) != 0,
-                                     ficha_3_final['ICMS_TOT_ORIG'] + (ficha_3_final['Incremento maximo unitario']*meta_fator)*ficha_3_final['QTD_CAT'],
-                                     0)
-    
+                                    ficha_3_final['ICMS_TOT_ORIG'] * (1 + meta_fator),
+                                    0)
+
+    ficha_3_final['VALOR_ICMS_OP_FINAL'] = np.where(ficha_3_final['Valor ICMS Operação'].fillna(0) != 0,
+                                        ficha_3_final['Valor ICMS Operação'] * (1 + meta_fator),
+                                        0)
+
+    ficha_3_final['ICMS_TOT_SAIDA_FINAL'] = np.where(ficha_3_final['ICMS_TOT_SAIDA_ORIG'].fillna(0) != 0,
+                                        ficha_3_final['ICMS_TOT_SAIDA_ORIG'] * (1 + meta_fator),
+                                        0)
+
     df_fim = ficha_3.copy()
     df_fim = df_fim.sort_values(by=['COD_ITEM', 'DATA', 'IND_OPER', 'SUB_TIPO'], 
-                                   ascending=[True, True, True, True]).reset_index().drop(['index'], axis=1)
-    
+                                    ascending=[True, True, True, True]).reset_index().drop(['index'], axis=1)
+
     df_fim['ICMS_TOT_FINAL'] = ficha_3_final['ICMS_TOT_FINAL']
+    df_fim['VALOR_ICMS_OP_FINAL'] = ficha_3_final['VALOR_ICMS_OP_FINAL']
+    df_fim['ICMS_TOT_SAIDA_FINAL'] = ficha_3_final['ICMS_TOT_SAIDA_FINAL']
+
     df_fim.rename(columns={'ICMS_TOT': 'ICMS_TOT_ORIG',
                             'ICMS_TOT_FINAL': 'ICMS_TOT',
-                            'VLR_CONF_0': 'VL_CONFR_0'}, inplace=True)
+                            'ICMS_TOT_SAIDA': 'ICMS_TOT_SAIDA_ORIG',
+                            'ICMS_TOT_SAIDA_FINAL': 'ICMS_TOT_SAIDA',
+                            'VLR_CONF_0': 'VL_CONFR_0',
+                            'Valor ICMS Operação': 'Valor ICMS Operação Orig',
+                            'VALOR_ICMS_OP_FINAL': 'Valor ICMS Operação'
+                            }, inplace=True)
+
+    df_fim = df_fim[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT',
+                            'ICMS_TOT','COD_LEGAL', 'VL_CONFR_0', 'ICMS_TOT_SAIDA',
+                            'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
+                            'Valor Complementar', 'Valor ICMS Substituição Tributária', 'Valor ICMS Operação',
+                            'CNPJ EMITENTE', 'vBCST', 'CST', 'Valor ICMS Operação Orig', 'ICMS_TOT_ORIG','ICMS_TOT_SAIDA_ORIG',
+                            'FONTE']]
     
     ficha_3_fim = calcular_ressarcimento(df_fim)
     
