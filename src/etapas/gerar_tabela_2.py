@@ -556,12 +556,12 @@ if cod_items_with_multiple_values.shape[0] > 0:
     print('Erro encontrado: Fator de conversão errado, favor verificar')
     cods = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM'].values
     salvar_dataframe_no_s3(tabela_2[(tabela_2['COD_ITEM'].isin(cods)) & (tabela_2['IND_OPER'] == 0)], bucket_name=bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
     sys.exit()
 
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2024-01-01') & (tabela_2['DATA'] <= '2024-12-31')]
-data = tabela_2['DATA'].astype(str).iloc[0][:4]
-# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
+# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2023-01-01') & (tabela_2['DATA'] <= '2023-12-31')]
+# data = tabela_2['DATA'].astype(str).iloc[0][:4]
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',
                     'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT', 'ICMS_TOT_SAIDA', 'VL_CONFR_0', 'COD_LEGAL',
                     'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',

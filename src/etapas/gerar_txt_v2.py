@@ -85,7 +85,7 @@ planilha['CEST'] = planilha['CEST'].astype(str).replace('<NA>', np.nan)
 planilha['CNPJ EMITENTE'] = pd.to_numeric(planilha['CNPJ EMITENTE'])
 planilha['CNPJ EMITENTE'] = planilha['CNPJ EMITENTE'].astype('Int64').astype(str).replace('<NA>', np.nan)
 
-planilha['QTD_CAT'] = planilha['QTD_CAT'].astype(str) + ',000'
+planilha['QTD_CAT'] = planilha['QTD_CAT'].apply(lambda x: f"{x:.3f}".replace('.', ','))
 
 planilha['COD_LEGAL'] = pd.to_numeric(planilha['COD_LEGAL'])
 planilha['COD_LEGAL'] = planilha['COD_LEGAL'].astype('Int64').astype(str).replace('<NA>', np.nan)

@@ -124,30 +124,32 @@ def calcular_ressarcimento(tabela_2):
     data['ICMS_TOT_0'] = ficha_3['ICMS_TOT']
     data['CST'] = ficha_3['CST']
     data['Valor ICMS Operação'] = ficha_3['Valor ICMS Operação']
-    data['VALOR_UNIT'] = np.where((data['CFOP'].astype(float).isin([1403, 1411, 2411])),
-                                    data['ICMS_TOT_0'].fillna(0) / data['QTD_CAT'],
-                                    np.nan)
-    data['VALOR_OP_UNIT'] = np.where((data['CFOP'].astype(float).isin([1403, 1411, 2411])),
+    data['VALOR_UNIT'] = np.where(data['IND_OPER'] == 0,
+                                data['ICMS_TOT_0'].fillna(0) / data['QTD_CAT'],
+                                np.nan)
+    data['VALOR_OP_UNIT'] = np.where(data['IND_OPER'] == 0,
                                     data['Valor ICMS Operação'].fillna(0) / data['QTD_CAT'],
                                     np.nan)
 
-    grouped_data = data.groupby('COD_ITEM').agg({
-        'VALOR_UNIT': 'mean',
-        'VALOR_OP_UNIT': 'mean',
-        'QTD_INI': 'first'
-    })
+    data['ICMS_INI'] = None
+    data['ICMS_OP_INI'] = None
 
-    val = np.random.random(size=len(grouped_data))
-    # Cálculo vetorizado para icms_init
-    grouped_data['ICMS_INI'] = grouped_data['VALOR_UNIT'] * (1 - 0.3 * val) * grouped_data['QTD_INI']
-    grouped_data['ICMS_OP_INI'] = grouped_data['VALOR_OP_UNIT'] * (1 - 0.3 * val) * grouped_data['QTD_INI']
-    data = data.merge(grouped_data[['ICMS_INI', 'ICMS_OP_INI']], how='left', left_on='COD_ITEM', right_index=True)
+    # Iterar sobre cada valor único de 'COD_ITEM'
+    for cod in data['COD_ITEM'].unique():
+        # Filtrar todas as linhas para o 'COD_ITEM' atual
+        df_cod = data[data['COD_ITEM'] == cod]
+        
+        # Identificar a primeira linha dentre todas do 'COD_ITEM'
+        idx_first = df_cod.index[0]
 
-    mask = data.duplicated(subset='COD_ITEM', keep='first')
+        # Identificar a primeira linha onde 'IND_OPER' == 0
+        df_ind_oper_0 = df_cod[df_cod['IND_OPER'] == 0]
+        if not df_ind_oper_0.empty:
+            idx_oper_0 = df_ind_oper_0.index[0]
 
-    # Definindo como nulo valores de 'ICMS_INI' onde a máscara é True, indicando que não é a primeira linha para 'COD_ITEM'
-    data['ICMS_INI'] = np.where(mask, np.nan, data['ICMS_INI'])
-    data['ICMS_OP_INI'] = np.where(mask, np.nan, data['ICMS_OP_INI'])
+            # Fazer os cálculos e salvar os valores na primeira linha do 'COD_ITEM'
+            data.at[idx_first, 'ICMS_INI'] = data.at[idx_oper_0, 'VALOR_UNIT'] * data.at[idx_first, 'QTD_INI']
+            data.at[idx_first, 'ICMS_OP_INI'] = data.at[idx_oper_0, 'VALOR_OP_UNIT'] * data.at[idx_first, 'QTD_INI']
 
     produtos_somente_saida = tabela_2.groupby('COD_ITEM')['IND_OPER'].all()
     produtos_somente_saida = produtos_somente_saida[produtos_somente_saida == True].index
@@ -568,7 +570,9 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5404, 5403, 5401]), 1, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5409]), 0, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1403, 1409, 1102, 2102, 1202, 2202]), np.nan, ficha_3['COD_LEGAL'])
-    # ficha_3.loc[pd.isna(ficha_3['COD_LEGAL']), 'COD_LEGAL_PCAT'] = np.nan
+    ficha_3['COD_LEGAL'] = np.where(ficha_3['VLR_COMPLEMENTO'] > 0,
+                                    0,
+                                    ficha_3['COD_LEGAL'])
 
     ficha_3['VLR_CONFR_PCAT'] = np.where(ficha_3['COD_LEGAL'].isin([1, 3]), 
                                             np.abs(ficha_3['VLR_CONFR_1']), np.nan)
