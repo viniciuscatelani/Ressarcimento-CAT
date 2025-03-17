@@ -154,7 +154,7 @@ def calcular_ressarcimento(tabela_2):
     produtos_somente_saida = tabela_2.groupby('COD_ITEM')['IND_OPER'].all()
     produtos_somente_saida = produtos_somente_saida[produtos_somente_saida == True].index
     prods_icms_0 = data.drop_duplicates(subset='COD_ITEM', keep='first')[(data['QTD_INI'] != 0) & (((data['ICMS_INI'] == 0) | (data['ICMS_INI'].isnull())) | ((data['ICMS_OP_INI'] == 0) | (data['ICMS_OP_INI'].isnull())))]
-    prods_icms_ini_igual_op = data.drop_duplicates(subset='COD_ITEM', keep='first')[data['ICMS_TOT'] == data['Valor ICMS Operação']]
+    prods_icms_ini_igual_op = data.drop_duplicates(subset='COD_ITEM', keep='first')[data['ICMS_INI'] == data['ICMS_OP_INI']]
     for produto in list(produtos_somente_saida) + list(prods_icms_0['COD_ITEM'].unique()) + list(prods_icms_ini_igual_op['COD_ITEM'].unique()):
     # for produto in data['COD_ITEM'].unique():
     # Executa a consulta para obter os valores mva_antes e mva_depois
