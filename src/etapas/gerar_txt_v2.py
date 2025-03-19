@@ -412,9 +412,9 @@ for date in planilha['Data'].unique():
     df_1050 = filtered[['COD_ITEM','QTD_INI', 'ICMS_INI', 'SALDO_FINAL_MES_QTD', 'SALDO_FINAL_MES_ICMS']]
     
     df_1050['COD_REG'] = ['1050']*(df_1050.shape[0])
-    df_1050['QTD_INI'] = df_1050['QTD_INI'].astype(float).astype(int).astype(str) + ',000'
+    df_1050['QTD_INI'] = df_1050['QTD_INI'].apply(lambda x: f"{x:.3f}".replace('.', ','))
     df_1050['ICMS_INI'] = df_1050['ICMS_INI'].astype(float).map(format_number)
-    df_1050['SALDO_FINAL_MES_QTD'] = df_1050['SALDO_FINAL_MES_QTD'].astype(float).astype(int).astype(str) + ',000'
+    df_1050['SALDO_FINAL_MES_QTD'] = df_1050['SALDO_FINAL_MES_QTD'].apply(lambda x: f"{x:.3f}".replace('.', ','))
     df_1050['SALDO_FINAL_MES_ICMS'] = df_1050['SALDO_FINAL_MES_ICMS'].astype(float).map(format_number)
     
     df_1050 = df_1050[['COD_REG', 'COD_ITEM', 'QTD_INI', 'ICMS_INI', 'SALDO_FINAL_MES_QTD', 'SALDO_FINAL_MES_ICMS']]
