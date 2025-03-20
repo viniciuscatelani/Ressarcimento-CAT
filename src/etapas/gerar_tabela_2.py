@@ -29,6 +29,11 @@ if nome_empresa.lower() == 'ladakh':
     cnpj_produtos = "07318052000150"
     cnpjs = [cnpj]
 
+if nome_empresa.lower() == 'sonda':
+    cnpj = "01937635001316"
+    cnpj_produtos = "01937635001316"
+    cnpjs = [cnpj]
+
 connection = psycopg2.connect(
         user=  'cat',
         password=  '5pM2h0MBQu9JHkxHud2A',

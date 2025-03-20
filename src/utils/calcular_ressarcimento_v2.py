@@ -444,6 +444,10 @@ def calcular_ressarcimento(tabela_2):
                                               np.abs(ficha_3['ICMS_TOT_1']),
                                               np.nan))
     
+    ficha_3['ICMS_TOT_PCAT'] = np.where(ficha_3['IND_OPER'] == 1,
+                                        np.nan,
+                                        ficha_3['ICMS_TOT_PCAT'])
+    
     if ficha_3[ficha_3['ICMS_TOT_PCAT'] < 0].shape[0] > 0:
         mensagem = 'EXISTE ICMS TOT PCAT NEGATIVO. FAVOR CHECAR!!'
         print(mensagem)
