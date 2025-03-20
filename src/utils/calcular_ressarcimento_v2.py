@@ -444,7 +444,7 @@ def calcular_ressarcimento(tabela_2):
                                               np.abs(ficha_3['ICMS_TOT_1']),
                                               np.nan))
     
-    ficha_3['ICMS_TOT_PCAT'] = np.where(ficha_3['IND_OPER'] == 1,
+    ficha_3['ICMS_TOT_PCAT'] = np.where((ficha_3['IND_OPER'] == 1) & (ficha_3['SUB_TIPO'] == 1),
                                         np.nan,
                                         ficha_3['ICMS_TOT_PCAT'])
     
@@ -579,7 +579,7 @@ def calcular_ressarcimento(tabela_2):
                                     0,
                                     ficha_3['COD_LEGAL'])
 
-    ficha_3['VLR_CONFR_PCAT'] = np.where(ficha_3['COD_LEGAL'].isin([1, 3]), 
+    ficha_3['VLR_CONFR_PCAT'] = np.where(ficha_3['COD_LEGAL'].isin([1, 2, 3, 4]), 
                                             np.abs(ficha_3['VLR_CONFR_1']), np.nan)
 
     ficha_3['VLR_CONFR_PCAT'] = np.where((ficha_3['CFOP'].isin(apenas_movimentacao)) | ((ficha_3['CFOP'].astype(int).isin([2202, 5117, 5120, 5929])) & (ficha_3['CST'].astype(float) != 60)), 

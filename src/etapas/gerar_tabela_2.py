@@ -497,8 +497,9 @@ tabela_2['CFOP'] = tabela_2['CFOP'].astype(int)
 tabela_2['IND_OPER'] = tabela_2['IND_OPER'].astype(int)
 tabela_2['sinal'] = tabela_2['sinal'].astype(int)
 
-mask = (tabela_2['IND_OPER'] == 1) & (tabela_2['sinal'] == 1) & \
-       (~tabela_2['CFOP'].isin([5409, 5927])) 
+condicao_1 = (tabela_2['IND_OPER'] == 1) & (tabela_2['sinal'] == 1)
+condicao_2 = (tabela_2['CFOP'].isin([1411, 2411]))
+mask = condicao_1 | condicao_2
 # Calculate the values using NumPy operations
 values = np.where(mask, tabela_2['VALOR'] * (tabela_2['ALIQUOTA'].fillna(0).astype(float) / 100), np.nan)
 
@@ -523,10 +524,10 @@ conditions = [
                            5410, 5411, 5413, 5556, 5910, 5922,
                            5949, 6202, 6411, 6922, 6403, 6910]),
     (tabela_2['CFOP'] == 5927),
-    (tabela_2['CFOP'] == 5405),
+    (tabela_2['CFOP'].isin([5405, 1411, 2411])),
     (tabela_2['CFOP'].isin([5117, 5120, 5929])) & (tabela_2['CST'] == 60),
     tabela_2['ALIQUOTA'].isnull(),
-    (tabela_2['CFOP'].isin([1102, 1411, 2102, 2202, 1403, 2411, 1202, 2403, 1949]))
+    (tabela_2['CFOP'].isin([1102, 2102, 2202, 1403, 1202, 2403, 1949]))
 ]
 
 
@@ -538,6 +539,10 @@ default_choice = 0
 
 # Use numpy.select to set values for 'COD_LEGAL'
 tabela_2['COD_LEGAL'] = np.select(conditions, choices, default=default_choice)
+
+tabela_2['VL_CONFR_0'] = np.where(tabela_2['COD_LEGAL'] == 0,
+                                  np.nan,
+                                  tabela_2['VL_CONFR_0'])
 
 # Substituição dos valores nulos de aliquota por 0
 
