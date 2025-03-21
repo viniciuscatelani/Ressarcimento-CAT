@@ -41,8 +41,18 @@ if nome_empresa.lower() == 'tateti':
 if nome_empresa.lower() == 'ladakh':
     cnpj = "07318052000150"
 
+if nome_empresa.lower() == 'sonda':
+    cnpj = "01937635001316"
 
-tabela_2 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+if nome_empresa.isin(['sonda']):
+    tabela_2_p1 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
+    tabela_2_p2 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
+    tabela_2_p3 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
+
+    tabela_2 = pd.concat([tabela_2_p1, tabela_2_p2, tabela_2_p3])
+else:
+    tabela_2 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+
 tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
 
 ficha_3 = calcular_ressarcimento(tabela_2)
@@ -62,5 +72,20 @@ if gti.lower() == 'sim':
 else:
     ficha_3_final = ficha_3
 
-salvar_dataframe_no_s3(ficha_3_final, bucket_name=bucket_name,s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_v2.xlsx',
+print('Ressarcimento total:', ficha_3_final['VLR_RESSARCIMENTO'].sum())
+
+
+if ficha_3_final.shape[0] > 1000000:
+    ficha_3_final_p1 = ficha_3_final[:ficha_3_final.shape[0]//3]
+    ficha_3_final_p2 = ficha_3_final[ficha_3_final.shape[0]//3:(ficha_3_final.shape[0]*2)//3]
+    ficha_3_final_p3 = ficha_3_final[(ficha_3_final.shape[0]*2)//3:]
+
+    salvar_dataframe_no_s3(ficha_3_final_p1, bucket_name=bucket_name,s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_p1_v2.xlsx',
+                       file_type='xlsx')
+    salvar_dataframe_no_s3(ficha_3_final_p2, bucket_name=bucket_name,s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_p2_v2.xlsx',
+                       file_type='xlsx')
+    salvar_dataframe_no_s3(ficha_3_final_p3, bucket_name=bucket_name,s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_p3_v2.xlsx',
+                       file_type='xlsx')
+else:
+    salvar_dataframe_no_s3(ficha_3_final, bucket_name=bucket_name,s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_v2.xlsx',
                        file_type='xlsx')

@@ -88,7 +88,7 @@ def calcular_ressarcimento(tabela_2):
                                     ficha_3['Valor ICMS Operação'])
 
     data = ficha_3[['COD_ITEM', 'DATA', 'QTD_CAT', 'IND_OPER', 'CFOP']]
-
+    
     # Transformação da coluna 'DATA' para o tipo correto
     data['DATA'] = pd.to_datetime(data['DATA'], format='%Y-%m-%d')
 
@@ -123,7 +123,7 @@ def calcular_ressarcimento(tabela_2):
     data['SUB_TIPO'] = tabela_2['SUB_TIPO']
     data['ICMS_TOT_0'] = ficha_3['ICMS_TOT']
     data['CST'] = ficha_3['CST']
-    data['Valor ICMS Operação'] = ficha_3['Valor ICMS Operação']
+    data['Valor ICMS Operação'] = ficha_3['Valor ICMS Operação'].astype(float)
     data['VALOR_UNIT'] = np.where(data['IND_OPER'] == 0,
                                 data['ICMS_TOT_0'].fillna(0) / data['QTD_CAT'],
                                 np.nan)

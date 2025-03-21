@@ -52,7 +52,7 @@ s3 = boto3.client('s3',
                   )
 
 # Leitura da tabela 1 gerada em etapa anterior
-tabela_1 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv')
+tabela_1 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
 tabela_1 = tabela_1.dropna(subset='Número Item')
 
 tabela_1['Código Produto ou Serviço'] = tabela_1['Código Produto ou Serviço'].astype(str)
@@ -561,15 +561,15 @@ pivot_table = tabela_2[(tabela_2['IND_OPER'] == 0) & (~tabela_2['CHV_DOC'].str.s
 
 # Checagem de erro em fator de conversão
 
-cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM']
-if cod_items_with_multiple_values.shape[0] > 0:
-    print('Erro encontrado: Fator de conversão errado, favor verificar')
-    cods = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM'].values
-    salvar_dataframe_no_s3(tabela_2[(tabela_2['COD_ITEM'].isin(cods)) & (tabela_2['IND_OPER'] == 0)], bucket_name=bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
-    sys.exit()
+# cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM']
+# if cod_items_with_multiple_values.shape[0] > 0:
+#     print('Erro encontrado: Fator de conversão errado, favor verificar')
+#     cods = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM'].values
+#     salvar_dataframe_no_s3(tabela_2[(tabela_2['COD_ITEM'].isin(cods)) & (tabela_2['IND_OPER'] == 0)], bucket_name=bucket_name,
+#                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
+#     sys.exit()
 
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
+# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
 # data = tabela_2['DATA'].astype(str).iloc[0][:4]
 # tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',
@@ -622,6 +622,22 @@ tabela_2_final['ICMS_TOT'] = np.where(tabela_2_final['CFOP'].isin([1102, 2102]),
 
 # Salvamento do arquivo da tabela 2
 
-salvar_dataframe_no_s3(tabela_2_final,
+if tabela_2_final.shape[0] > 1000000:
+    tabela_2_final_p1 = tabela_2_final[:tabela_2_final.shape[0]//3]
+    tabela_2_final_p2 = tabela_2_final[tabela_2_final.shape[0]//3:(tabela_2_final.shape[0]*2)//3]
+    tabela_2_final_p3 = tabela_2_final[(tabela_2_final.shape[0]*2)//3:]
+
+    salvar_dataframe_no_s3(tabela_2_final_p1,
+                       bucket_name,
+                       s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
+    salvar_dataframe_no_s3(tabela_2_final_p2,
+                       bucket_name,
+                       s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
+    salvar_dataframe_no_s3(tabela_2_final_p3,
+                       bucket_name,
+                       s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
+
+else:
+    salvar_dataframe_no_s3(tabela_2_final,
                        bucket_name,
                        s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')

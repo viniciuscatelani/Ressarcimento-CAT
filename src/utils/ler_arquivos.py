@@ -13,7 +13,7 @@ s3 = boto3.client('s3',
                   region_name=os.getenv('AWS_DEFAULT_REGION')
                   )
 
-def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv'):
+def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv', sep=None):
     """
     Lê um arquivo do S3 e carrega em um DataFrame do Pandas.
     
@@ -25,7 +25,7 @@ def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv'):
     try:
         response = s3.get_object(Bucket=bucket_name, Key=s3_key)
         if file_type == 'csv':
-            df = pd.read_csv(BytesIO(response['Body'].read()), dtype=str, header=0, sep=';')
+            df = pd.read_csv(BytesIO(response['Body'].read()), dtype=str, header=0, sep=sep)
         elif file_type == 'xlsx':
             df = pd.read_excel(BytesIO(response['Body'].read()))
         else:
