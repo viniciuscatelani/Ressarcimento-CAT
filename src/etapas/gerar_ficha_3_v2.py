@@ -44,7 +44,7 @@ if nome_empresa.lower() == 'ladakh':
 if nome_empresa.lower() == 'sonda':
     cnpj = "01937635001316"
 
-if nome_empresa.isin(['sonda']):
+if nome_empresa in ['sondas']:
     tabela_2_p1 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
     tabela_2_p2 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
     tabela_2_p3 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
