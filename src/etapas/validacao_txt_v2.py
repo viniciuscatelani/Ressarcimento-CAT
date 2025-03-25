@@ -140,7 +140,7 @@ if merged[merged['Diffs'] >= 0.1].shape[0] > 0:
 final_df['cfop'] = final_df['cfop'].astype(str)
 # Checagem de existência de ICMS_TOT
 
-if final_df[(final_df['cfop'].isin(['1403', '1409', '1411', '5411'])) & (final_df['icms_tot'].isnull())].shape[0] > 0:
+if final_df[(final_df['ind_oper'].isin(['1403', '1409', '1411', '5411'])) & (final_df['icms_tot'].isnull())].shape[0] > 0:
     print('Existem entradas, devoluções de entrada e devoluções de saída com ICMS_TOT nulo. Favor checar')
     sys.exit()
     

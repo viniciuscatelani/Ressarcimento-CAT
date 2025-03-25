@@ -9,6 +9,7 @@ import openpyxl
 import os
 import boto3
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 from src.utils.ler_arquivos import ler_arquivo_para_dataframe, salvar_dataframe_no_s3
 
@@ -34,13 +35,9 @@ if nome_empresa.lower() == 'sonda':
     cnpj_produtos = "01937635001316"
     cnpjs = [cnpj]
 
-connection = psycopg2.connect(
-        user=  'cat',
-        password=  '5pM2h0MBQu9JHkxHud2A',
-        host=  '177.11.49.194',
-        port="3361",
-        database=  '4btaxtech'
-    )
+engine = create_engine(
+    f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:3361/{os.getenv('DATABASE_NAME')}"
+)
 
 # Variáveis para acesso ao s3
 bucket_name = '4btaxtech'
@@ -50,6 +47,8 @@ s3 = boto3.client('s3',
                   aws_secret_access_key='x1Pf0GFs603F9w+d0ba6tCdFJEOq6O9QHDyJG/4J',
                   region_name='us-east-1'
                   )
+
+print("✅ Cliente S3 autenticado com sucesso!")
 
 # Leitura da tabela 1 gerada em etapa anterior
 tabela_1 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
@@ -78,9 +77,9 @@ if uso_complementar.lower() == 'não':
 
 # Leitura da tabela da efd_mod55 para um data frame
 
-query = f"SELECT * FROM modelo55 WHERE cnpj = '{cnpj}';"
+query = f"SELECT * FROM modelo55 WHERE cnpj = '{cnpj}'"
 
-efd = pd.read_sql_query(query, connection)
+efd = pd.read_sql_query(query, engine)
 if efd.shape[0] == 0:
     print(f'Tabela modelo 55 da loja {nome_empresa.title()}:{cnpj} não consta no banco. Favor verificar')
     sys.exit()
@@ -91,9 +90,9 @@ efd['codigo_do_item'] = efd['codigo_do_item'].astype(float)
 
 # Leitura da tabela da efd_mod59 para um data frame
 
-query = f'SELECT * FROM modelo59 WHERE cnpj = {cnpj}'
+query = f"SELECT * FROM modelo59 WHERE modelo59.cnpj = '{cnpj}';"
 
-efd_mod59 = pd.read_sql_query(query, connection)
+efd_mod59 = pd.read_sql_query(query, engine)
 if (efd_mod59.shape[0] == 0) and (nome_empresa != 'ladakh'):
     print(f'Tabela modelo 59 da loja {nome_empresa.title()}:{cnpj} não consta no banco. Favor verificar')
     sys.exit()
@@ -184,7 +183,7 @@ if duplicate_df.shape[0] > 0:
 # do banco de dados
 
 query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
-produtos = pd.read_sql_query(query, connection)
+produtos = pd.read_sql_query(query, engine)
 
 # Checagem de erro em relação à duplicidade de aliquota na tabela de produtos
 
@@ -366,8 +365,8 @@ tabela_2['CEST'] = df['cest_y']
 
 # Preenchimento da coluna Entr_PCAT
 
-cfops = [1102, 1202, 1403, 1409, 1411, 
-         1949, 2101, 2102, 2202, 2209, 
+cfops = [1102, 1403, 1409, 1411, 
+         1949, 2101, 2102, 2209, 
          2401, 2403, 2405, 2409, 
          2411, 2414, 2949, 5101, 5102, 
          5117, 5118, 
@@ -482,7 +481,7 @@ tabela_2['ICMS_TOT_SAIDA'] = np.where((tabela_2['IND_OPER'] == 1),
 tabela_2 = tabela_2[tabela_2['Entr_PCAT'] == 1]
 
 query = 'select * from cfop'
-df_2 = pd.read_sql_query(query, connection)
+df_2 = pd.read_sql_query(query, engine)
 
 tabela_2['CFOP'] = tabela_2['CFOP'].astype(int)
 df_2['cfop'] = df_2['cfop'].astype(int)
@@ -521,13 +520,13 @@ conditions = [
     (tabela_2['CST'] == 40) & (tabela_2['IND_OPER'] == 1),
     tabela_2['CFOP'].isin([6102, 6152, 6404, 6409, 6108, 6117]),
     tabela_2['CFOP'].isin([5102, 5152, 5201, 5202, 5210, 5409,
-                           5410, 5411, 5413, 5556, 5910, 5922,
-                           5949, 6202, 6411, 6922, 6403, 6910]),
+                           5410, 5413, 5556, 5910, 5922,
+                           5949, 6202, 6922, 6403, 6910]),
     (tabela_2['CFOP'] == 5927),
     (tabela_2['CFOP'].isin([5405, 1411, 2411])),
     (tabela_2['CFOP'].isin([5117, 5120, 5929])) & (tabela_2['CST'] == 60),
     tabela_2['ALIQUOTA'].isnull(),
-    (tabela_2['CFOP'].isin([1102, 2102, 2202, 1403, 1202, 2403, 1949]))
+    (tabela_2['CFOP'].isin([1102, 2102, 2202, 1403, 1202, 2403, 1949, 5411, 1409, 2409]))
 ]
 
 
@@ -561,15 +560,15 @@ pivot_table = tabela_2[(tabela_2['IND_OPER'] == 0) & (~tabela_2['CHV_DOC'].str.s
 
 # Checagem de erro em fator de conversão
 
-# cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM']
-# if cod_items_with_multiple_values.shape[0] > 0:
-#     print('Erro encontrado: Fator de conversão errado, favor verificar')
-#     cods = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM'].values
-#     salvar_dataframe_no_s3(tabela_2[(tabela_2['COD_ITEM'].isin(cods)) & (tabela_2['IND_OPER'] == 0)], bucket_name=bucket_name,
-#                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
-#     sys.exit()
+cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM']
+if cod_items_with_multiple_values.shape[0] > 0:
+    print('Erro encontrado: Fator de conversão errado, favor verificar')
+    cods = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM'].values
+    salvar_dataframe_no_s3(tabela_2[(tabela_2['COD_ITEM'].isin(cods)) & (tabela_2['IND_OPER'] == 0)], bucket_name=bucket_name,
+                           s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
+    sys.exit()
 
-# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
 # data = tabela_2['DATA'].astype(str).iloc[0][:4]
 # tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',

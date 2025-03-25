@@ -574,7 +574,7 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['COD_LEGAL'] = np.where((ficha_3['COD_LEGAL'] == 1) & (ficha_3['VLR_RESSARCIMENTO'] != 0) & (ficha_3['ALIQUOTA'] != 0), 1, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5404, 5403, 5401]), 1, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5409]), 0, ficha_3['COD_LEGAL'])
-    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1403, 1409, 1102, 2102, 1202, 2202]), np.nan, ficha_3['COD_LEGAL'])
+    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1403, 1409, 1102, 2102, 2403, 1409, 5411, 6411, 2409]), np.nan, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['VLR_COMPLEMENTO'] > 0,
                                     0,
                                     ficha_3['COD_LEGAL'])
@@ -585,7 +585,7 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['VLR_CONFR_PCAT'] = np.where((ficha_3['CFOP'].isin(apenas_movimentacao)) | ((ficha_3['CFOP'].astype(int).isin([2202, 5117, 5120, 5929])) & (ficha_3['CST'].astype(float) != 60)), 
                                             np.nan, np.abs(ficha_3['VLR_CONFR_PCAT']))
 
-    if ficha_3[(ficha_3['COD_LEGAL'].isin([1, 3])) & (ficha_3['VLR_CONFR_PCAT'] <= 0)].shape[0] > 0:
+    if ficha_3[(ficha_3['COD_LEGAL'].isin([1, 2, 3, 4])) & (ficha_3['VLR_CONFR_PCAT'] <= 0)].shape[0] > 0:
         mensagem = 'Há valores de confronto inconsistentes. Favor checar.'
         print(mensagem)
         sys.exit()
