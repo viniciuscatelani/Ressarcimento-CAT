@@ -480,8 +480,10 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['VLR_CONFR_1'] = np.where(ficha_3['VLR_CONFR_1'] <= 0.01,
                                               0.01,
                                               ficha_3['VLR_CONFR_1'])
-                                              
-    ficha_3['VLR_CONFR_1'] = np.where(ficha_3['IND_OPER'] == 1, ficha_3['VLR_CONFR_1'], np.nan)
+                                          
+    cond_1 = (ficha_3['IND_OPER'] == 1) & (ficha_3['SUB_TIPO'] == 1)
+    cond_2 = ficha_3['CFOP'].astype(float).isin([1411, 2411])                      
+    ficha_3['VLR_CONFR_1'] = np.where(cond_1 | cond_2, ficha_3['VLR_CONFR_1'], np.nan)
     
     mask_cod_1 = np.abs(ficha_3['ICMS_SAIDA']) > np.abs(ficha_3['VLR_CONFR_1'])
     mask_cod_3 = ficha_3['VLR_CONFR_1'] < ficha_3['ICMS_EFETIVO_ENTRADA']

@@ -518,12 +518,12 @@ tabela_2['SUB_TIPO'] = tabela_2['SUB_TIPO'].astype(int)
 
 conditions = [
     (tabela_2['CST'] == 40) & (tabela_2['IND_OPER'] == 1),
-    tabela_2['CFOP'].isin([6102, 6152, 6404, 6409, 6108, 6117]),
+    tabela_2['CFOP'].isin([2411, 6102, 6152, 6404, 6409, 6108, 6117]),
     tabela_2['CFOP'].isin([5102, 5152, 5201, 5202, 5210, 5409,
                            5410, 5413, 5556, 5910, 5922,
                            5949, 6202, 6922, 6403, 6910]),
     (tabela_2['CFOP'] == 5927),
-    (tabela_2['CFOP'].isin([5405, 1411, 2411])),
+    (tabela_2['CFOP'].isin([5405, 1411])),
     (tabela_2['CFOP'].isin([5117, 5120, 5929])) & (tabela_2['CST'] == 60),
     tabela_2['ALIQUOTA'].isnull(),
     (tabela_2['CFOP'].isin([1102, 2102, 2202, 1403, 1202, 2403, 1949, 5411, 1409, 2409]))
