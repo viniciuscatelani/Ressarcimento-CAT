@@ -141,35 +141,51 @@ final_df['cfop'] = final_df['cfop'].astype(str)
 final_df['cod_legal'] = final_df['cod_legal'].astype(float)
 # Checagem de existência de ICMS_TOT
 
-if final_df[(final_df['ind_oper'].isin(['1403', '1409', '1411', '5411'])) & (final_df['icms_tot'].isnull())].shape[0] > 0:
+cfops_com_icms_tot = [1403, 2403, 5411, 6411, 1411, 2411]
+
+cfops_sem_icms_tot = [5405, 5409, 5403, 5401, 6404, 6409,
+                      6102, 6108, 6152]
+
+if final_df[(final_df['cfop'].isin(cfops_com_icms_tot)) & (final_df['icms_tot'].isnull())].shape[0] > 0:
     print('❌Existem entradas, devoluções de entrada e devoluções de saída com ICMS_TOT nulo. Favor checar')
     sys.exit()
     
-if final_df[(final_df['cfop'].isin(['5409', '5405', '5403', '5401'])) & (final_df['icms_tot'].notnull())].shape[0] > 0:
+if final_df[(final_df['cfop'].isin(cfops_sem_icms_tot)) & (final_df['icms_tot'].notnull())].shape[0] > 0:
     print('❌Existem saídas com campo ICMS_TOT preenchido. Favor checar')
     sys.exit()
 
 # Checagem de Valor de confronto
 
-if final_df[(final_df['cfop'].isin(['1403', '1409', '5411'])) & (final_df['vlr_confr'].notnull())].shape[0] > 0:
+cfop_sem_valor_confr = [1403, 1409, 5411, 5202, 6202, 6411, 1202, 2202,
+                        2403, 2409]
+
+cfop_com_valor_confr = [5405, 1411, 5409, 5403, 5401, 2411, 6404,
+                        6409, 6102, 6108, 6152]
+
+if final_df[(final_df['cfop'].isin(cfop_sem_valor_confr)) & (final_df['vlr_confr'].notnull())].shape[0] > 0:
     print('❌Existem entradas e devoluções de entrada com Valor de Confronto não nulo. Favor, checar.')
     sys.exit()
     
-if final_df[(final_df['cfop'].isin(['5405', '1411', '5409', '5403', '5401'])) & (final_df['cod_legal'] >= 1) & (final_df['vlr_confr'].isnull())].shape[0] > 0:
+if final_df[(final_df['cfop'].isin(cfop_com_valor_confr)) & (final_df['cod_legal'] >= 1) & (final_df['vlr_confr'].isnull())].shape[0] > 0:
     print('❌Existem sáidas e devoluções de saída com Valor de Confronto nulo. Favor, checar.')
     sys.exit()
     
-if final_df[(final_df['cfop'].isin(['5405', '1411', '5409', '5403', '5401'])) & (final_df['cod_legal'] == 0) & (final_df['vlr_confr'].notnull())].shape[0] > 0:
+if final_df[(final_df['cfop'].isin(cfop_com_valor_confr)) & (final_df['cod_legal'] == 0) & (final_df['vlr_confr'].notnull())].shape[0] > 0:
     print('❌Existem saídas e devoluções de saída com Valor de Confronto não nulo quando Código Legal igual a 0. Favor, checar')
     sys.exit()
 
 # Cheagem de código legal
 
-if final_df[(final_df['cfop'].isin(['1403', '1409', '5411'])) & (final_df['cod_legal'].notnull())].shape[0] > 0:
+cfop_com_cod_legal = [1411, 2411, 1202, 2202, 5404, 5409, 6404, 6409,
+                      6102, 6108, 6152]
+
+cfop_sem_cod_legal = [1403, 2403, 1409, 2409, 5411, 6411, 5202, 6202,]
+
+if final_df[(final_df['cfop'].isin(cfop_sem_cod_legal)) & (final_df['cod_legal'].notnull())].shape[0] > 0:
     print('❌Existem entradas e devoluções de entrada com Código Legal não nulo. Favor, checar.')
     sys.exit()
     
-if final_df[(final_df['cfop'].isin(['5405', '1411', '5409', '5403', '5401'])) & (final_df['cod_legal'].isnull())].shape[0] > 0:
+if final_df[(final_df['cfop'].isin(cfop_com_cod_legal)) & (final_df['cod_legal'].isnull())].shape[0] > 0:
     print('❌Existem sáidas e devoluções de saída com Código Legal nulo. Favor, checar.')
     sys.exit()
 
