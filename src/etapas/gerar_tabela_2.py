@@ -464,9 +464,9 @@ tabela_2['ICMS_TOT'] = np.where(
 )
 
 cond_1 = tabela_2['CFOP'].isin([1102, 2102])
-cond_2 = (tabela_2['CST'] != 60) & (tabela_2['CFOP'].isin([1202, 2202]))
+# cond_2 = (tabela_2['CST'] != 60) & (tabela_2['CFOP'].isin([1202, 2202]))
 
-tabela_2['ICMS_TOT'] = np.where(cond_1 | cond_2, 
+tabela_2['ICMS_TOT'] = np.where(cond_1, 
                                 np.nan, 
                                 tabela_2['ICMS_TOT'])
 

@@ -529,6 +529,10 @@ def calcular_ressarcimento(tabela_2):
         ficha_3['VLR_RESSARCIMENTO']
     )
 
+    ficha_3['VLR_RESSARCIMENTO'] = np.where(ficha_3['CFOP'].isin([1411, 2411]),
+                                            0,
+                                            ficha_3['VLR_RESSARCIMENTO'])
+
     mask_cod_1 = np.abs(ficha_3['ICMS_SAIDA']) < np.abs(ficha_3['VLR_CONFR_1'])
     mask_cod_3 = ficha_3['VLR_CONFR_1'] > ficha_3['ICMS_EFETIVO_ENTRADA']
 
