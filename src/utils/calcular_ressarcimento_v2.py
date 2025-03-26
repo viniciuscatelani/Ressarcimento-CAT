@@ -576,10 +576,10 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['COD_LEGAL'] = np.where((ficha_3['COD_LEGAL'] == 1) & (ficha_3['VLR_RESSARCIMENTO'] != 0) & (ficha_3['ALIQUOTA'] != 0), 1, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5404, 5403, 5401]), 1, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5409]), 0, ficha_3['COD_LEGAL'])
-    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1403, 1409, 1102, 2102, 2403, 1409, 5411, 6411, 2409]), np.nan, ficha_3['COD_LEGAL'])
-    ficha_3['COD_LEGAL'] = np.where(ficha_3['VLR_COMPLEMENTO'] > 0,
-                                    0,
-                                    ficha_3['COD_LEGAL'])
+    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1403, 1409, 1102, 2102, 2403, 1409, 5411, 6411, 2409, 5202, 6202]), np.nan, ficha_3['COD_LEGAL'])
+    # ficha_3['COD_LEGAL'] = np.where(ficha_3['VLR_COMPLEMENTO'] > 0,
+    #                                 0,
+    #                                 ficha_3['COD_LEGAL'])
 
     ficha_3['VLR_CONFR_PCAT'] = np.where(ficha_3['COD_LEGAL'].isin([1, 2, 3, 4]), 
                                             np.abs(ficha_3['VLR_CONFR_1']), np.nan)
@@ -608,8 +608,6 @@ def calcular_ressarcimento(tabela_2):
     ficha_3['Valor ICMS Substituição Tributária'] = tabela_2['Valor ICMS Substituição Tributária']
     ficha_3['CNPJ EMITENTE'] = tabela_2['CNPJ EMITENTE']
     
-    # condition_1 = (ficha_3['QTD_INI'] == 0) & (ficha_3['ICMS_INI'] == 0)
-    # condition_2 = (ficha_3['CFOP'].astype(float).isin([1403, 2403, 6404, 6404]))
     ficha_3 = ficha_3[~ficha_3['COD_ITEM'].isin(['109100', '109001', '1094100'])].reset_index().drop('index', axis=1)
 
     ficha_3 = ficha_3[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT',
