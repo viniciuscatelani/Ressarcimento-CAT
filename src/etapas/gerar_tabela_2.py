@@ -570,7 +570,7 @@ if cod_items_with_multiple_values.shape[0] > 0:
                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
     sys.exit()
 
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2024-01-01') & (tabela_2['DATA'] <= '2024-12-31')]
 # data = tabela_2['DATA'].astype(str).iloc[0][:4]
 # tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',

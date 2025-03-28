@@ -190,7 +190,7 @@ df_0150 = df_0150[['empresa', 'registro', 'codigo_participante', 'razao_social',
 df_0150['registro'] = '0150'
 df_0150 = df_0150[df_0150['empresa'] == f'{cnpj}']
 if df_0150.shape[0] == 0:
-        print(f'CNPJ {cnpj} não possui 0150. Favor atualizar arquivo')
+        print(f'❌CNPJ {cnpj} não possui 0150. Favor atualizar arquivo')
         sys.exit()
 df_0150['data'] = df_0150['data'].str.slice(0, 10).astype(str)
 df_0150['data'] = [datetime.strptime(x, '%d/%m/%Y').strftime('%m%Y') for x in df_0150['data']]
@@ -247,9 +247,9 @@ for date in dates:
             df_cnpj_repetido = pd.concat([df_cnpj_repetido, df])
             
 if df_cnpj_repetido.shape[0] > 0:
-    print('Existe repetição de CNPJ. Favor verificar')
-    print(f'O CNPJ repetido é: {list(df_cnpj_repetido["cnpj"].unique())}')
-    print(f'A data em que ocorreu a repetição é {list(df_cnpj_repetido["data"].unique())}')
+    print('❌Existe repetição de CNPJ. Favor verificar')
+    print(f'❌O CNPJ repetido é: {list(df_cnpj_repetido["cnpj"].unique())}')
+    print(f'❌A data em que ocorreu a repetição é {list(df_cnpj_repetido["data"].unique())}')
     sys.exit()
 
 df_ie_repetido = pd.DataFrame(columns=df_0150_final.columns)
@@ -263,9 +263,9 @@ for date in dates:
             df_ie_repetido = pd.concat([df_ie_repetido, df])
     
 if df_ie_repetido.shape[0] > 0:
-    print('Existe repetição de Inscrição Estadual. Favor verificar')
-    print(f'A IE repetida é: {list(df_ie_repetido["ie"].unique())}')
-    print(f'A data em que ocorreu a repetição é {list(df_ie_repetido["data"].unique())}')
+    print('❌Existe repetição de Inscrição Estadual. Favor verificar')
+    print(f'❌A IE repetida é: {list(df_ie_repetido["ie"].unique())}')
+    print(f'❌A data em que ocorreu a repetição é {list(df_ie_repetido["data"].unique())}')
     sys.exit()
 
 # Remove duplicatas
@@ -278,8 +278,8 @@ if not duplicados.empty:
     mensagem = 'ATENÇÃO. EXISTE CODIGO DE PARTICIPANTE REPETIDO. FAVOR CHECAR'
     print(mensagem)
     for _, row in duplicados.iterrows():
-        print(f"O código repetido é igual a {row['codigo_participante']}")
-        print(f"A data da repetição é igual a {row['data']}")
+        print(f"❌O código repetido é igual a {row['codigo_participante']}")
+        print(f"❌A data da repetição é igual a {row['data']}")
     sys.exit()
 
 # Iterate through each file in the folder
@@ -336,14 +336,14 @@ df = df_0150_final_new.copy()
 df['Dígito_Verificador_Válido'] = df['cnpj'].apply(verifica_digito_verificador)
 
 if len(df['Dígito_Verificador_Válido'].unique()) > 1:
-    print('Existem CNPJs com dígito verificador inválido. Favor checar.')
-    print(f'O CNPJ com dígito verificador inválido é {list(df["cnpj"].unique())}')
+    print('❌Existem CNPJs com dígito verificador inválido. Favor checar.')
+    print(f'❌O CNPJ com dígito verificador inválido é {list(df["cnpj"].unique())}')
     sys.exit()
 
 def recalcular_digito_verificador(nfe_completa):
     # Verifica se a NF-e com o dígito verificador tem o tamanho correto
     if pd.isnull(nfe_completa) or len(nfe_completa) != 44:
-        raise ValueError(f"Valor inválido na coluna 'CHV_DOC': {nfe_completa}")
+        raise ValueError(f"❌Valor inválido na coluna 'CHV_DOC': {nfe_completa}")
 
     # Remove o último caractere (dígito verificador)
     nfe_sem_dv = nfe_completa[:-1]
@@ -374,7 +374,7 @@ for date in planilha['Data'].unique():
     df_0000_['ie'] = df_0000_['ie'].str.replace('-', '')
     df_0000_ = df_0000_.drop('empresa', axis=1)
     if df_0000_.shape[0] != 1:
-        print(f'Erro no 0000 do CNPJ {cnpj} para a data {date}. Favor verificar')
+        print(f'❌Erro no 0000 do CNPJ {cnpj} para a data {date}. Favor verificar')
         sys.exit()
         
     # Geração da 0150
@@ -382,7 +382,7 @@ for date in planilha['Data'].unique():
     # df_0150 has originally 8 columns
     df_0150_ = df_0150_final_new[df_0150_final_new['data'] == date]
     if df_0150_.shape[0] == 0:
-        print(f'CNPJ {cnpj} não possui 0150 para a data {date}. Favor atualizar arquivo')
+        print(f'❌CNPJ {cnpj} não possui 0150 para a data {date}. Favor atualizar arquivo')
         sys.exit()
     df_0150_ = df_0150_[df_0150_['cnpj'].notnull()]
     df_0150_['ie'] = df_0150_['ie'].str.replace('-', '')
@@ -399,7 +399,7 @@ for date in planilha['Data'].unique():
     df_0200.drop_duplicates(subset='COD_ITEM', keep='first', inplace=True)
     for cod in list(df_0200['COD_ITEM'].unique()):
         if df_0200[df_0200['COD_ITEM'] == cod].shape[0] > 1:
-            mensagem = 'ATENÇÃO. EXISTE CODIGO DE PRODUTO DUPLICADO NO 0200.'
+            mensagem = '❌ATENÇÃO. EXISTE CODIGO DE PRODUTO DUPLICADO NO 0200.❌'
             print(mensagem)
             print(f'O código duplicado é {cod}')
             sys.exit()
@@ -423,7 +423,7 @@ for date in planilha['Data'].unique():
     # Geração da 1100
     df_1100_ = df_1100[df_1100['Data'] == date]
     if df_1100_[df_1100_['VLR_CONFR_PCAT'] < 0.01].shape[0] > 0:
-        mensagem = 'ATNEÇÂO. EXISTE VALOR DE CONFRONTO IGUAL A 0.'
+        mensagem = '❌ATNEÇÂO. EXISTE VALOR DE CONFRONTO IGUAL A 0.❌'
         print(mensagem)
         sys.exit()
     df_1100_['ICMS_TOT_PCAT'] = df_1100_['ICMS_TOT_PCAT'].astype(float).map(format_number)
@@ -446,7 +446,7 @@ for date in planilha['Data'].unique():
         if df_0150_[df_0150_['cnpj'] == cnpj_].shape[0] == 0:
             mensagem = 'ATENÇÃO. EXISTE PARTICIPANTE NO 1100 QUE NÃO ESTÁ NO 0150.'
             print(mensagem)
-            print(f'O participante faltante no 0150 tem CNPJ {cnpj_}, para o mês {date}')
+            print(f'❌O participante faltante no 0150 tem CNPJ {cnpj_}, para o mês {date}')
             sys.exit()
     
     df_1100_ = df_1100_[['COD_REG','CHV_DOC','DATA','NUM_ITEM','IND_OPER','COD_ITEM','CFOP','QTD_FIN','ICMS_TOT_PCAT','VLR_CONFR_PCAT','COD_LEGAL']]
@@ -523,4 +523,4 @@ for date in planilha['Data'].unique():
         # Fazer o upload do arquivo concatenado para o S3
         s3.put_object(Body=merged_content, Bucket=bucket_name, Key=s3_path)
         
-        print(f'Arquivo da CAT salvo em {s3_path}')
+        print(f'✅Arquivo da CAT salvo em {s3_path}')
