@@ -121,7 +121,7 @@ tabela_1['Valor Produto ou Serviço'] = tabela_1['Valor Produto ou Serviço'].as
 
 # Preenchimento da coluna bc_complementar_total_complementar
 
-tabela_1['Número Item'] = tabela_1['Número Item'].astype(float)
+tabela_1['Número Item'] = tabela_1['Número Item'].str.replace("{'valor': ", '').str.replace('}', '').str.replace("'", '').astype(float) 
 tabela_1['Chave Acesso NFe'] = tabela_1['Chave Acesso NFe'].astype(str)
 
 complementar_final['Item NFE Origem'] = complementar_final['Item NFE Origem'].astype(float)
