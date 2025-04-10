@@ -35,6 +35,11 @@ if nome_empresa.lower() == 'sonda':
     cnpj_produtos = "01937635001316"
     cnpjs = [cnpj]
 
+if nome_empresa.lower() == 'mensa':
+    cnpj = "10290457000212"
+    cnpj_produtos = "10290457000212"
+    cnpjs = [cnpj]
+
 engine = create_engine(
     f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:3361/{os.getenv('DATABASE_NAME')}"
 )
@@ -81,7 +86,7 @@ query = f"SELECT * FROM modelo55 WHERE cnpj = '{cnpj}'"
 
 efd = pd.read_sql_query(query, engine)
 if efd.shape[0] == 0:
-    print(f'Tabela modelo 55 da loja {nome_empresa.title()}:{cnpj} não consta no banco. Favor verificar')
+    print(f'❌Tabela modelo 55 da loja {nome_empresa.title()}:{cnpj} não consta no banco. Favor verificar')
     sys.exit()
 
 # Alteração do tipo de dado
@@ -94,7 +99,7 @@ query = f"SELECT * FROM modelo59 WHERE modelo59.cnpj = '{cnpj}';"
 
 efd_mod59 = pd.read_sql_query(query, engine)
 if (efd_mod59.shape[0] == 0) and (nome_empresa != 'ladakh'):
-    print(f'Tabela modelo 59 da loja {nome_empresa.title()}:{cnpj} não consta no banco. Favor verificar')
+    print(f'❌Tabela modelo 59 da loja {nome_empresa.title()}:{cnpj} não consta no banco. Favor verificar')
     sys.exit()
 
 
@@ -176,7 +181,7 @@ merged['CHAVE_ITEM'] = merged['Chave Acesso NFe'].astype(str) + '-' + merged['N�
 duplicate_mask = merged['CHAVE_ITEM'].duplicated(keep=False)
 duplicate_df = merged[duplicate_mask]
 if duplicate_df.shape[0] > 0:
-    print('Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
+    print('❌Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
     sys.exit()
 
 # Leitura para um dataframe da tabela de produtos
@@ -193,7 +198,7 @@ mask = produtos.groupby('codigo_produto')['icms'].transform('nunique') > 1
 result = produtos[mask]
 result = result.sort_values(by='codigo_produto')
 if result.shape[0] > 0:
-    print('DUPLICAÇÃO DE ALIQUOTA NA TABELA DE PRODUTOS, FAVOR CHECAR')
+    print('❌DUPLICAÇÃO DE ALIQUOTA NA TABELA DE PRODUTOS, FAVOR CHECAR')
     sys.exit()
 
 # Ajustes de dados e definição de informações para aplicação da regras de 
@@ -244,7 +249,7 @@ df_merged['CHAVE_ITEM'] = df_merged['Chave Acesso NFe'].astype(str) + '-' + df_m
 duplicate_mask = df_merged['CHAVE_ITEM'].duplicated(keep=False)
 duplicate_df = df_merged[duplicate_mask]
 if duplicate_df.shape[0] > 0:
-    print('Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
+    print('❌Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
     sys.exit()
 
 df_merged = df_merged.drop_duplicates()
@@ -564,7 +569,7 @@ pivot_table = tabela_2[(tabela_2['IND_OPER'] == 0) & (~tabela_2['CHV_DOC'].str.s
 
 cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM']
 if cod_items_with_multiple_values.shape[0] > 0:
-    print('Erro encontrado: Fator de conversão errado, favor verificar')
+    print('❌Erro encontrado: Fator de conversão errado, favor verificar')
     cods = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_ITEM'].values
     salvar_dataframe_no_s3(tabela_2[(tabela_2['COD_ITEM'].isin(cods)) & (tabela_2['IND_OPER'] == 0)], bucket_name=bucket_name,
                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
@@ -582,8 +587,8 @@ tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MV
                     'Valor Base Cálculo ICMS Substituição Tributária', 'vBCST', 'FONTE']]
 
 if tabela_2[tabela_2['ALIQUOTA'].isnull()].shape[0] > 0:
-    print('Erro encontrado. Existem Alíquotas vazias, favor verificar')
-    print('Os seguintes códigos não possuem Aliquota:')
+    print('❌Erro encontrado. Existem Alíquotas vazias, favor verificar')
+    print('❌Os seguintes códigos não possuem Aliquota:')
     print(list(tabela_2[tabela_2['ALIQUOTA'].isnull()]['COD_ITEM'].unique()))
     print(tabela_2[tabela_2[['CHV_DOC','COD_ITEM', 'DESCRICAO', 'FONTE']]])
     sys.exit()
@@ -608,7 +613,7 @@ tabela_2_final['CHAVE_ITEM'] = tabela_2_final['CHV_DOC'].astype(str) + '-' + tab
 duplicate_mask = tabela_2_final['CHAVE_ITEM'].duplicated(keep=False)
 duplicate_df = tabela_2_final[duplicate_mask]
 if duplicate_df.shape[0] > 0:
-    print('Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
+    print('❌Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
     sys.exit()
 
 tabela_2_final['CHAVE_ITEM'] = tabela_2_final['CHV_DOC'].astype(str) + '-' + tabela_2_final['NUM_ITEM'].astype(str)
@@ -616,7 +621,7 @@ tabela_2_final['CHAVE_ITEM'] = tabela_2_final['CHV_DOC'].astype(str) + '-' + tab
 duplicate_mask = tabela_2_final['CHAVE_ITEM'].duplicated(keep=False)
 duplicate_df = tabela_2_final[duplicate_mask]
 if duplicate_df.shape[0] > 0:
-    print('Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
+    print('❌Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
     sys.exit()
 
 tabela_2_final['ICMS_TOT'] = np.where(tabela_2_final['CFOP'].isin([1102, 2102]), np.nan, tabela_2_final['ICMS_TOT'])
