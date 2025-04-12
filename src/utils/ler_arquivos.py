@@ -29,8 +29,7 @@ def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv', sep=None):
         print(f"✅ Arquivo '{s3_key}' lido com sucesso!")
         return df
     except Exception as e:
-        print(f"❌ Erro ao ler arquivo do S3: {e}")
-        return None
+        raise ValueError(f"❌ Erro ao ler arquivo do S3: {e}")
 
 def salvar_dataframe_no_s3(df, bucket_name, s3_key, file_type='csv'):
     """

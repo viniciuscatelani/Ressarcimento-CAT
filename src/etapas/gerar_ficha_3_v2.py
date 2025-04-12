@@ -44,14 +44,18 @@ if nome_empresa.lower() == 'ladakh':
 if nome_empresa.lower() == 'sonda':
     cnpj = "01937635001316"
 
-if nome_empresa in ['sondas']:
+if nome_empresa.lower() == 'mensa':
+    cnpj = "10290457000212"
+
+try:
+    tabela_2 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+
+except:
     tabela_2_p1 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
     tabela_2_p2 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
     tabela_2_p3 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
 
     tabela_2 = pd.concat([tabela_2_p1, tabela_2_p2, tabela_2_p3])
-else:
-    tabela_2 = ler_arquivo_para_dataframe(bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
 
 tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
 
@@ -73,6 +77,7 @@ else:
     ficha_3_final = ficha_3
 
 print('Ressarcimento total:', ficha_3_final['VLR_RESSARCIMENTO'].sum())
+print('Complemento total:', ficha_3['VLR_COMPLEMENTO'])
 
 
 if ficha_3_final.shape[0] > 1000000:
