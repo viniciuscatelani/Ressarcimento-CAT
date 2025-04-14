@@ -77,7 +77,7 @@ else:
     ficha_3_final = ficha_3
 
 print('Ressarcimento total:', ficha_3_final['VLR_RESSARCIMENTO'].sum())
-print('Complemento total:', ficha_3['VLR_COMPLEMENTO'])
+print('Complemento total:', ficha_3['VLR_COMPLEMENTO'].sum())
 
 
 if ficha_3_final.shape[0] > 1000000:
