@@ -97,8 +97,9 @@ efd['codigo_do_item'] = efd['codigo_do_item'].astype(float)
 
 query = f"SELECT * FROM modelo59 WHERE modelo59.cnpj = '{cnpj}';"
 
+empresa_sem_mod59 = ['ladakh', 'mensa']
 efd_mod59 = pd.read_sql_query(query, engine)
-if (efd_mod59.shape[0] == 0) and (nome_empresa != 'ladakh'):
+if (efd_mod59.shape[0] == 0) and (nome_empresa not in empresa_sem_mod59):
     print(f'❌Tabela modelo 59 da loja {nome_empresa.title()}:{cnpj} não consta no banco. Favor verificar')
     sys.exit()
 
