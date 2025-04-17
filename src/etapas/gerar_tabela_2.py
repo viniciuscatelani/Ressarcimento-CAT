@@ -36,7 +36,7 @@ if nome_empresa.lower() == 'sonda':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'mensa':
-    cnpj = "10290457000212"
+    cnpj = "10290457000565"
     cnpj_produtos = "10290457000212"
     cnpjs = [cnpj]
 
@@ -532,8 +532,8 @@ conditions = [
     (tabela_2['CFOP'].isin([5405, 1411])),
     (tabela_2['CFOP'].isin([5117, 5120, 5929])) & (tabela_2['CST'] == 60),
     tabela_2['ALIQUOTA'].isnull(),
-    (tabela_2['CFOP'].isin([1102, 2102, 2202, 1403, 
-                            1202, 2403, 1949, 5411, 
+    (tabela_2['CFOP'].isin([1102, 2102, 1403, 
+                             2403, 1949, 5411, 
                             1409, 2409, 5202, 6202, 6411]))
 ]
 
@@ -626,7 +626,7 @@ if duplicate_df.shape[0] > 0:
     sys.exit()
 
 tabela_2_final['ICMS_TOT'] = np.where(tabela_2_final['CFOP'].isin([1102, 2102]), np.nan, tabela_2_final['ICMS_TOT'])
-
+tabela_2_final = tabela_2_final[tabela_2_final['VALOR'] != 0]
 # Salvamento do arquivo da tabela 2
 
 if tabela_2_final.shape[0] > 1000000:

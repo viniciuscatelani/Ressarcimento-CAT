@@ -21,7 +21,8 @@ connection = psycopg2.connect(
         database=  '4btaxtech'
     )
 
-def calcular_ressarcimento(tabela_2):
+
+def calcular_ressarcimento(tabela_2, cnpj_produtos):
     '''
     Função para cálculo do valor de ressarcimento
     para a loja e de outras informações para o
@@ -38,7 +39,7 @@ def calcular_ressarcimento(tabela_2):
     ficha_3 = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'Valor ICMS Operação',
                             'CST', 'ALIQUOTA', 'FONTE']]
 
-    query = 'SELECT * FROM produtos'
+    query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
     produtos = pd.read_sql_query(query, connection)
 
     # Ordenação da tabela de acordo com os critérios definidos
@@ -578,8 +579,8 @@ def calcular_ressarcimento(tabela_2):
                                     ficha_3['COD_LEGAL'])
 
     ficha_3['COD_LEGAL'] = np.where((ficha_3['COD_LEGAL'] == 1) & (ficha_3['VLR_RESSARCIMENTO'] != 0) & (ficha_3['ALIQUOTA'] != 0), 1, ficha_3['COD_LEGAL'])
-    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5404, 5403, 5401]), 1, ficha_3['COD_LEGAL'])
-    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5409, 1411, 2411]), 0, ficha_3['COD_LEGAL'])
+    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5404, 5403, 5401, 5405]), 1, ficha_3['COD_LEGAL'])
+    ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([5409, 1411, 2411, 1202, 2202]), 0, ficha_3['COD_LEGAL'])
     ficha_3['COD_LEGAL'] = np.where(ficha_3['CFOP'].isin([1403, 1409, 1102, 2102, 2403, 1409, 5411, 6411, 2409, 5202, 6202]), np.nan, ficha_3['COD_LEGAL'])
     # ficha_3['COD_LEGAL'] = np.where(ficha_3['VLR_COMPLEMENTO'] > 0,
     #                                 0,
