@@ -401,10 +401,16 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
                 if (row['QTD_ent1_devolv_ent'] < 0) & (row['QTD_CAT'] == row['QTD_INI']) :
                     icms_tot_1_int.append(-row['ICMS_INI'])
                 else:
-                    if pd.isna(row['ICMS_TOT']):
-                        icms_tot_1_int.append(0)
+                    if row['IND_OPER'] == 0:
+                        if pd.isna(row['ICMS_TOT']):
+                            icms_tot_1_int.append(0)
+                        else:
+                            icms_tot_1_int.append(row['ICMS_TOT'])
                     else:
-                        icms_tot_1_int.append(row['ICMS_TOT']) 
+                        if pd.isna(row['ICMS_TOT_SAIDA']):
+                            icms_tot_1_int.append(0)
+                        else:
+                            icms_tot_1_int.append(row['ICMS_TOT_SAIDA'])
             else:
                 if row['QTD_ent1_devolv_ent'] < 0:
                     if (qtd_cat[i] == qtd_saldo[i-1]):

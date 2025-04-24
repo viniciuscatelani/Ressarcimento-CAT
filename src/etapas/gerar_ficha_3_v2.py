@@ -51,7 +51,7 @@ if nome_empresa.lower() == 'sonda':
     
 
 if nome_empresa.lower() == 'mensa':
-    cnpj = "10290457000565"
+    cnpj = "10290457000212"
     cnpj_produtos = "10290457000212"
    
 
