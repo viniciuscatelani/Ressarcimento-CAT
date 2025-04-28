@@ -15,9 +15,6 @@ import boto3
 from src.utils.calcular_ressarcimento_v2 import calcular_ressarcimento
 from src.utils.calcular_gti import gti_pra_cima, gti_pra_baixo
 from src.utils.ler_arquivos import ler_arquivo_para_dataframe, salvar_dataframe_no_s3
-# Leitura do arquivo da tabela 2
-
-start = time.time()
 
 # Carregando variáveis de ambiente
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../', '.env'))
@@ -53,6 +50,11 @@ if nome_empresa.lower() == 'sonda':
 if nome_empresa.lower() == 'mensa':
     cnpj = "10290457000212"
     cnpj_produtos = "10290457000212"
+
+if nome_empresa.lower() == 'casa mimosa':
+    cnpj = "62978978000180"
+    cnpj_produtos = "62978978000180"
+    cnpjs = [cnpj]
    
 
 try:
