@@ -15,7 +15,7 @@ from src.utils.ler_arquivos import ler_arquivo_para_dataframe, salvar_dataframe_
 
 # Carregando variáveis de ambiente
 dotenv_path = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '../../', '.env'))
+    os.path.dirname(__file__), '../../.env'))
 print(f"Carregando .env de: {dotenv_path}")
 load_dotenv(dotenv_path, override=True)
 
@@ -54,8 +54,8 @@ engine = create_engine(
 bucket_name = '4btaxtech'
 
 s3 = boto3.client('s3',
-                  aws_access_key_id='AKIA4RCAOBRSFONXEUTE',
-                  aws_secret_access_key='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',
+                  aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                  aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
                   region_name='us-east-1'
                   )
 
@@ -387,6 +387,23 @@ tabela_2['CODIGO_BARRA'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Aces
 # Preenchimento da coluna UNIDADE
 
 tabela_2['UNIDADE'] = df['Unidade Comercial']
+
+if nome_empresa == 'mensa':
+    tabela_2_cols = tabela_2.columns
+    fat_conv = pd.read_excel('FATOR_NOVO_filtrado.xlsx')
+    fat_conv['CODPROD'] = fat_conv['CODPROD'].astype(str)
+    tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
+    tabela_2 = tabela_2.merge(fat_conv,
+                              left_on=['COD_ITEM', 'UNIDADE'],
+                              right_on=['CODPROD', 'CODVOL'],
+                              how='left').drop_duplicates()
+    tabela_2['QTDUNIDADE'] = tabela_2['QTDUNIDADE'].fillna(1)
+    tabela_2['QTD_CAT'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)),
+                                   np.where(tabela_2['DIVIDEMULTIPLICA'] == 'M',
+                                            tabela_2['QTD_NOTA'].astype(float) * tabela_2['QTDUNIDADE'].astype(float),
+                                            tabela_2['QTD_NOTA'].astype(float) / tabela_2['QTDUNIDADE'].astype(float)),
+                                   tabela_2['QTD_CAT'])
+    tabela_2 = tabela_2[tabela_2_cols]
 
 # Preenchimento da coluna N C M
 
