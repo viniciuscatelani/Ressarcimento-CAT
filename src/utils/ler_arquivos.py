@@ -7,6 +7,7 @@ import os
 # No início do módulo
 bucket_name = '4btaxtech'
 
+
 def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv', sep=None):
     """
     Lê um arquivo do S3 e carrega em um DataFrame do Pandas.
@@ -14,22 +15,26 @@ def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv', sep=None):
     try:
         # Criar o client boto3 aqui, após o .env já ter sido carregado
         s3 = boto3.client('s3',
-            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-            region_name=os.getenv('AWS_DEFAULT_REGION')
-        )
+                          aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                          aws_secret_access_key=os.getenv(
+                              'AWS_SECRET_ACCESS_KEY'),
+                          region_name=os.getenv('AWS_DEFAULT_REGION')
+                          )
 
         response = s3.get_object(Bucket=bucket_name, Key=s3_key)
         if file_type == 'csv':
-            df = pd.read_csv(BytesIO(response['Body'].read()), dtype=str, header=0, sep=sep)
+            df = pd.read_csv(
+                BytesIO(response['Body'].read()), dtype=str, header=0, sep=sep)
         elif file_type == 'xlsx':
             df = pd.read_excel(BytesIO(response['Body'].read()))
         else:
-            raise ValueError("Tipo de arquivo não suportado. Use 'csv' ou 'xlsx'.")
+            raise ValueError(
+                "Tipo de arquivo não suportado. Use 'csv' ou 'xlsx'.")
         print(f"✅ Arquivo '{s3_key}' lido com sucesso!")
         return df
     except Exception as e:
-        raise ValueError(f"❌ Erro ao ler arquivo do S3: {e}")
+        raise ValueError(f"❌ Erro ao ler arquivo {s3_key} do S3: {e}")
+
 
 def salvar_dataframe_no_s3(df, bucket_name, s3_key, file_type='csv'):
     """
@@ -38,10 +43,11 @@ def salvar_dataframe_no_s3(df, bucket_name, s3_key, file_type='csv'):
     try:
         # Criar o client aqui também
         s3 = boto3.client('s3',
-            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-            region_name=os.getenv('AWS_DEFAULT_REGION')
-        )
+                          aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                          aws_secret_access_key=os.getenv(
+                              'AWS_SECRET_ACCESS_KEY'),
+                          region_name=os.getenv('AWS_DEFAULT_REGION')
+                          )
 
         buffer = BytesIO()
         if file_type == 'csv':
@@ -50,7 +56,8 @@ def salvar_dataframe_no_s3(df, bucket_name, s3_key, file_type='csv'):
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False)
         else:
-            raise ValueError("Tipo de arquivo não suportado. Use 'csv' ou 'xlsx'.")
+            raise ValueError(
+                "Tipo de arquivo não suportado. Use 'csv' ou 'xlsx'.")
 
         buffer.seek(0)
         s3.put_object(Bucket=bucket_name, Key=s3_key, Body=buffer.getvalue())
