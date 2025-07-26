@@ -63,7 +63,7 @@ print("✅ Cliente S3 autenticado com sucesso!")
 
 # Leitura da tabela 1 gerada em etapa anterior
 tabela_1 = ler_arquivo_para_dataframe(
-    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_2020_{nome_empresa}.csv', file_type='csv', sep=';')
+    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
 
 print(tabela_1.columns)
 tabela_1 = tabela_1.dropna(subset='Número Item')
@@ -140,7 +140,7 @@ tabela_1['Data Emissão'] = pd.to_datetime(
     tabela_1['Data Emissão'], format='mixed')
 
 # Formatação da coluna Valor Produto ou Serviço para o tipo correto
-
+print(tabela_1['Valor Produto ou Serviço'].unique())
 tabela_1['Valor Produto ou Serviço'] = tabela_1['Valor Produto ou Serviço'].astype(
     float)
 
@@ -390,17 +390,25 @@ tabela_2['CODIGO_BARRA'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Aces
 
 tabela_2['UNIDADE'] = df['Unidade Comercial']
 
+tabela_2['FONTE'] = df['Tipo']
+
 if nome_empresa == 'mensa':
     tabela_2_cols = tabela_2.columns
-    fat_conv = pd.read_excel('FATOR_NOVO_filtrado.xlsx')
+    fat_conv_multiplicacao = pd.read_excel(
+        'FATOR_NOVO_filtrado.xlsx', sheet_name='Multiplicacao')
+    fat_conv_divisao = pd.read_excel(
+        'FATOR_NOVO_filtrado.xlsx', sheet_name='Divisao')
+    fat_conv = pd.concat([fat_conv_multiplicacao, fat_conv_divisao])
     fat_conv['CODPROD'] = fat_conv['CODPROD'].astype(str)
     tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
+    print('Tamanho tabela 2 pré-merge:', tabela_2.shape)
     tabela_2 = tabela_2.merge(fat_conv,
                               left_on=['COD_ITEM', 'UNIDADE'],
                               right_on=['CODPROD', 'CODVOL'],
                               how='left').drop_duplicates()
+    print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
     tabela_2['QTDUNIDADE'] = tabela_2['QTDUNIDADE'].fillna(1)
-    tabela_2['QTD_CAT'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)),
+    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'entrada') & (~tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)),
                                    np.where(tabela_2['DIVIDEMULTIPLICA'] == 'M',
                                             tabela_2['QTD_NOTA'].astype(
                                                 float) * tabela_2['QTDUNIDADE'].astype(float),
@@ -474,7 +482,6 @@ tabela_2['Valor ICMS ST Retido'] = df['Valor ICMS ST Retido']
 tabela_2['Valor ICMS Substituto'] = df['Valor ICMS Substituto']
 tabela_2['QTD_CAT'] = tabela_2['QTD_CAT'].replace('nan', np.nan)
 tabela_2['CST'] = df['CST ICMS']
-tabela_2['FONTE'] = df['Tipo']
 
 # Preenchimento da coluna ICMS_TOT
 tabela_2['Valor ICMS Operação'] = np.where((tabela_2['FONTE'] == 'entrada') & (~tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)),
@@ -715,15 +722,15 @@ if tabela_2_final.shape[0] > 1000000:
 
     salvar_dataframe_no_s3(tabela_2_final_p1,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2020_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
     salvar_dataframe_no_s3(tabela_2_final_p2,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2020_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
     salvar_dataframe_no_s3(tabela_2_final_p3,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2020_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
 
 else:
     salvar_dataframe_no_s3(tabela_2_final,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2020_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
