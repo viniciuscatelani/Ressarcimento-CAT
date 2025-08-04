@@ -12,6 +12,8 @@ def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv', sep=None):
     """
     Lê um arquivo do S3 e carrega em um DataFrame do Pandas.
     """
+    print(f"🔍 Bucket: {bucket_name}")
+    print(f"🔍 S3 Key: '{s3_key}'")
     try:
         # Criar o client boto3 aqui, após o .env já ter sido carregado
         s3 = boto3.client('s3',

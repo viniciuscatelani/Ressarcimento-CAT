@@ -46,6 +46,10 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpj_produtos = "62978978000180"
     cnpjs = [cnpj]
 
+if nome_empresa.lower() == 'tobras':
+    cnpj = "05759383001686"
+    cnpjs = [cnpj]
+
 engine = create_engine(
     f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:3361/{os.getenv('DATABASE_NAME')}"
 )
@@ -111,7 +115,7 @@ efd['codigo_do_item'] = efd['codigo_do_item'].astype(float)
 
 query = f"SELECT * FROM modelo59 WHERE modelo59.cnpj = '{cnpj}';"
 
-empresa_sem_mod59 = ['ladakh', 'mensa']
+empresa_sem_mod59 = ['ladakh', 'mensa', 'tobras']
 efd_mod59 = pd.read_sql_query(query, engine)
 if (efd_mod59.shape[0] == 0) and (nome_empresa not in empresa_sem_mod59):
     print(
@@ -215,8 +219,34 @@ if duplicate_df.shape[0] > 0:
 # Leitura para um dataframe da tabela de produtos
 # do banco de dados
 
-query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
-produtos = pd.read_sql_query(query, engine)
+if nome_empresa == 'tobras':
+    # leitura do arquivo com as informações
+    produtos = pd.read_excel('TABELA DE PRODUTOS_TOBRAS.xlsx')
+
+    # adição de colunas com informações nulas
+    produtos['empresa'] = np.nan
+    produtos['anvisa'] = np.nan
+    produtos['ncm'] = np.nan
+    produtos['cest'] = np.nan
+    produtos['mva_antes'] = np.nan
+    produtos['mva_depois'] = np.nan
+    produtos['data_valida'] = np.nan
+
+    # renomeação das colunas
+    produtos.rename(columns={
+        'item_cProd': 'codigo_produto',
+        'item_xProd': 'descricao',
+        'aliquota': 'icms'
+    }, inplace=True)
+
+    # remoção de coluna não necessária
+    produtos.drop('Valor_Pauta', axis=1, inplace=True)
+
+    # alteração do tipo de dado da coluna de acordo com o necessário
+    produtos['codigo_produto'] = produtos['codigo_produto'].astype(str)
+else:    
+    query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
+    produtos = pd.read_sql_query(query, engine)
 
 # Checagem de erro em relação à duplicidade de aliquota na tabela de produtos
 
@@ -408,12 +438,11 @@ if nome_empresa == 'mensa':
                               how='left').drop_duplicates()
     print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
     tabela_2['QTDUNIDADE'] = tabela_2['QTDUNIDADE'].fillna(1)
-    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'entrada') & (~tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)),
-                                   np.where(tabela_2['DIVIDEMULTIPLICA'] == 'M',
+    tabela_2['QTD_CAT'] = np.where(tabela_2['DIVIDEMULTIPLICA'] == 'M',
                                             tabela_2['QTD_NOTA'].astype(
                                                 float) * tabela_2['QTDUNIDADE'].astype(float),
-                                            tabela_2['QTD_NOTA'].astype(float) / tabela_2['QTDUNIDADE'].astype(float)),
-                                   tabela_2['QTD_CAT'])
+                                            tabela_2['QTD_NOTA'].astype(float) / tabela_2['QTDUNIDADE'].astype(float))
+                                   
     tabela_2 = tabela_2[tabela_2_cols]
 
 # Preenchimento da coluna N C M
@@ -452,10 +481,13 @@ cfops = [1102, 1202, 1403, 1409, 1411,
          6411, 6414, 6556, 6910,
          6911, 6922, 6923]
 
-tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)) & (tabela_2['CEST'].notnull()),
-                                 1,
-                                 0)
+# tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)) & (tabela_2['CEST'].notnull()),
+#                                  1,
+#                                  0)
 
+tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)),
+                                 1,
+                                 0) # a ser usado para a empresa Tobras
 
 # Preenchimento das colunas CNPJ EMITENTE e CNPJ DESTINATARIO
 
