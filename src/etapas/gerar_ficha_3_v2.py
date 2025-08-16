@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import boto3
 
 from src.utils.calcular_ressarcimento_v2 import calcular_ressarcimento
+from src.utils.calcular_gti import gti_pra_cima, gti_pra_baixo
 from src.utils.ler_arquivos import ler_arquivo_para_dataframe, salvar_dataframe_no_s3
 
 # Carregando variáveis de ambiente
@@ -79,7 +80,21 @@ tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
 
 ficha_3 = calcular_ressarcimento(tabela_2, cnpj_produtos)
 
-ficha_3_final = ficha_3
+gti = input('Precisa de GTI?: ')
+
+if gti.lower() == 'sim':
+
+    meta_ = input('Qual é o valor da meta de ressarcimento ?: ')
+    meta = float(meta_)
+    if ficha_3['VLR_RESSARCIMENTO'].sum() < meta:
+        top_prods = input('Qual o top de produtos para a conta?: ')
+        ficha_3_final = gti_pra_cima(
+            ficha_3, meta_ressarc=meta, top_prods=int(top_prods), cnpj_produtos=cnpj_produtos)
+    else:
+        # ficha_3_final = gti_pra_cima(ficha_3, meta_ressarc=meta)
+        ficha_3_final = ficha_3
+else:
+    ficha_3_final = ficha_3
 
 print('Ressarcimento total:', f"R$ {ficha_3_final['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
     ',', 'v').replace('.', ',').replace('v', '.'))
