@@ -67,7 +67,7 @@ print("✅ Cliente S3 autenticado com sucesso!")
 
 # Leitura da tabela 1 gerada em etapa anterior
 tabela_1 = ler_arquivo_para_dataframe(
-    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_2021_{nome_empresa}.csv', file_type='csv', sep=';')
+    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
 
 print(tabela_1.columns)
 tabela_1 = tabela_1.dropna(subset='Número Item')
@@ -787,15 +787,15 @@ if tabela_2_final.shape[0] > 1000000:
 
     salvar_dataframe_no_s3(tabela_2_final_p1,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2021_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
     salvar_dataframe_no_s3(tabela_2_final_p2,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2021_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
     salvar_dataframe_no_s3(tabela_2_final_p3,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2021_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
 
 else:
     salvar_dataframe_no_s3(tabela_2_final,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2021_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')

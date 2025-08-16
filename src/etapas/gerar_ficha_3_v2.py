@@ -64,7 +64,7 @@ if nome_empresa.lower() == 'tobras':
 
 try:
     tabela_2 = ler_arquivo_para_dataframe(
-        bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2021_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+        bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
 
 except:
     tabela_2_p1 = ler_arquivo_para_dataframe(
@@ -121,5 +121,5 @@ if ficha_3_final.shape[0] > 1000000:
     salvar_dataframe_no_s3(ficha_3_final_p3, bucket_name=bucket_name, s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_p3_v2.xlsx',
                            file_type='xlsx')
 else:
-    salvar_dataframe_no_s3(ficha_3_final, bucket_name=bucket_name, s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_2021{nome_empresa.title()}_{cnpj}_v2.xlsx',
+    salvar_dataframe_no_s3(ficha_3_final, bucket_name=bucket_name, s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_v2.xlsx',
                            file_type='xlsx')
