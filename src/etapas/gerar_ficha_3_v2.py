@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 import boto3
 
 from src.utils.calcular_ressarcimento_v2 import calcular_ressarcimento
-from src.utils.calcular_gti import gti_pra_cima, gti_pra_baixo
 from src.utils.ler_arquivos import ler_arquivo_para_dataframe, salvar_dataframe_no_s3
 
 # Carregando variáveis de ambiente
