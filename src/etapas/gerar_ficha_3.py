@@ -44,17 +44,7 @@ tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
 
 ficha_3 = calcular_ressarcimento(tabela_2)
 
-gti = input('Precisa de GTI?: ')
-
-if gti.lower() == 'sim':
-
-    meta = 0.085
-    if ficha_3['VLR_RESSARCIMENTO'].sum() / ficha_3[ficha_3['CFOP'] == 5405]['VALOR'].sum()  > 0.085:
-       ficha_3_final = gti_pra_baixo(ficha_3, meta)
-    else:
-        ficha_3_final = gti_pra_cima(ficha_3, meta)
-else:
-    ficha_3_final = ficha_3
+ficha_3_final = ficha_3
 
 salvar_dataframe_no_s3(ficha_3_final, bucket_name=bucket_name,s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}.xlsx',
                        file_type='xlsx')

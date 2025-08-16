@@ -22,7 +22,7 @@ connection = psycopg2.connect(
 )
 
 
-def calcular_ressarcimento(tabela_2, cnpj_produtos):
+def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
     '''
     Função para cálculo do valor de ressarcimento
     para a loja e de outras informações para o
@@ -38,10 +38,38 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
     tabela_2['QTD_CAT'] = tabela_2['QTD_CAT'].astype(float)
 
     ficha_3 = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'Valor ICMS Operação',
-                        'CST', 'ALIQUOTA', 'FONTE']]
+                        'CST', 'ALIQUOTA', 'DESCRICAO', 'N C M', 'FONTE']]
 
-    query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
-    produtos = pd.read_sql_query(query, connection)
+    if cnpj_produtos == None:
+        # leitura do arquivo com as informações
+        produtos = pd.read_excel('TABELA DE PRODUTOS_TOBRAS.xlsx')
+
+        # adição de colunas com informações nulas
+        produtos['empresa'] = np.nan
+        produtos['anvisa'] = np.nan
+        produtos['ncm'] = np.nan
+        produtos['cest'] = np.nan
+        produtos['mva_antes'] = np.nan
+        produtos['mva_depois'] = np.nan
+        produtos['data_valida'] = np.nan
+
+        # renomeação das colunas
+        produtos.rename(columns={
+            'item_cProd': 'codigo_produto',
+            'item_xProd': 'descricao',
+            'aliquota': 'icms'
+        }, inplace=True)
+
+        # remoção de coluna não necessária
+        produtos.drop('Valor_Pauta', axis=1, inplace=True)
+
+        # alteração do tipo de dado da coluna de acordo com o necessário
+        produtos['codigo_produto'] = produtos['codigo_produto'].astype(str)
+        produtos['icms'] = produtos['icms'].str.replace(
+            ',', '.').astype(float)*100
+    else:
+        query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
+        produtos = pd.read_sql_query(query, connection)
 
     # Ordenação da tabela de acordo com os critérios definidos
     ficha_3['DATA'] = pd.to_datetime(ficha_3['DATA'], format='%Y-%m-%d')
@@ -77,7 +105,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
                                     ) * (ficha_3['MVA'] + 1),
                                    ficha_3['ICMS_TOT'])
 
-    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 2102])) | (ficha_3['IND_OPER'] == 1),
+    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 2102, 1664])) | (ficha_3['IND_OPER'] == 1),
                                    np.nan,
                                    ficha_3['ICMS_TOT'])
 
@@ -155,9 +183,18 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
     for cod in data['COD_ITEM'].unique():
         # Filtrar todas as linhas para o 'COD_ITEM' atual
         df_cod = data[data['COD_ITEM'] == cod]
-
         # Identificar a primeira linha dentre todas do 'COD_ITEM'
         idx_first = df_cod.index[0]
+
+        # Identificando o valor unitário para o primeiro ICMS_TOT diferente de 0 e não-nulo
+        try:
+            valor_unitario = df_cod[df_cod['ICMS_TOT_0'].fillna(
+                0) != 0]['VALOR_UNIT'].values[0]
+            valor_op_unitario = df_cod[(df_cod['Valor ICMS Operação'].fillna(
+            0) != 0) & (df_cod['IND_OPER'] == 0)]['VALOR_OP_UNIT'].values[0]
+        except:
+            valor_unitario = 0
+            valor_op_unitario = 0
 
         # Identificar a primeira linha onde 'IND_OPER' == 0
         df_ind_oper_0 = df_cod[df_cod['IND_OPER'] == 0]
@@ -165,10 +202,10 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
             idx_oper_0 = df_ind_oper_0.index[0]
 
             # Fazer os cálculos e salvar os valores na primeira linha do 'COD_ITEM'
-            data.at[idx_first, 'ICMS_INI'] = data.at[idx_oper_0,
-                                                     'VALOR_UNIT'] * data.at[idx_first, 'QTD_INI']
-            data.at[idx_first, 'ICMS_OP_INI'] = data.at[idx_oper_0,
-                                                        'VALOR_OP_UNIT'] * data.at[idx_first, 'QTD_INI']
+            data.at[idx_first, 'ICMS_INI'] = valor_unitario * \
+                data.at[idx_first, 'QTD_INI']
+            data.at[idx_first, 'ICMS_OP_INI'] = valor_op_unitario * \
+                data.at[idx_first, 'QTD_INI']
 
     produtos_somente_saida = tabela_2.groupby('COD_ITEM')['IND_OPER'].all()
     produtos_somente_saida = produtos_somente_saida[produtos_somente_saida == True].index
@@ -238,7 +275,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
 
     ficha_3 = ficha_3[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER',
                        'SUB_TIPO', 'QTD_CAT', 'Valor ICMS Operação', 'CST', 'QTD_INI', 'ICMS_INI', 'ICMS_OP_INI',
-                       'ALIQUOTA', 'FONTE', 'ICMS_TOT', 'ICMS_TOT_SAIDA', 'VALOR']]
+                       'ALIQUOTA', 'FONTE', 'ICMS_TOT', 'ICMS_TOT_SAIDA', 'VALOR', 'DESCRICAO', 'N C M']]
 
     # Inicializa as colunas
     ficha_3['valor_op_fixo'] = 0
@@ -291,7 +328,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
                         num = row['valor_op_fixo'] + 0 + row['ICMS_OP_INI']
                     else:
                         num = row['valor_op_fixo'] + \
-                            row['Valor ICMS Operação'] + row['ICMS_OP_INI']
+                            row['Valor ICMS Operação'] + subset.iloc[0]['ICMS_OP_INI']
                     den = row['qtd_fixa'] + row['QTD_CAT'] + \
                         subset.iloc[0]['QTD_INI']
                     valor_medio.append(num / den)
@@ -543,7 +580,8 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
                            5401, 5409, 5410, 5411, 5413, 5551, 5556, 5603,
                            5910, 5911, 5916, 5920, 5921, 5922, 5923, 5949,
                            6101, 6103, 6119, 6202, 6401, 6403, 6411,
-                           6556, 6910, 6911, 6922, 6923]
+                           6556, 6910, 6911, 6922, 6923, 5661, 5921,
+                           1664, 5663, 5655, 1922, 1949]
 
     ficha_3['VLR_RESSARCIMENTO'] = 0
 
@@ -696,7 +734,8 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
     ficha_3['CNPJ EMITENTE'] = tabela_2['CNPJ EMITENTE']
 
     ficha_3 = ficha_3[~ficha_3['COD_ITEM'].isin(
-        ['109100', '109001', '1094100', '1091000'])].reset_index().drop('index', axis=1)
+        ['109100', '109001', '1094100', '1091000',
+         '100202', '100501', '100301'])].reset_index().drop('index', axis=1)
 
     ficha_3 = ficha_3[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT',
                        'QTD_INI', 'ICMS_INI', 'ICMS_OP_INI', 'QTD_ent1_devolv_ent', 'ICMS_TOT', 'ICMS_TOT_SAIDA', 'ICMS_TOT_ent_unit',
@@ -704,7 +743,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos):
                        'ULT_ICMS_SAIDA_UNI', 'ICMS_SAIDA', 'ICMS_TOT_PCAT', 'VLR_CONF_0', 'VLR_CONFR_UNIT',
                        'ULT_VLR_CONFR_UNIT', 'VLR_CONFR_1', 'QTD_SALDO', 'ICMS_TOT_SALDO', 'VLR_RESSARCIMENTO',
                        'VLR_COMPLEMENTO', 'COD_LEGAL', 'VLR_CONFR_PCAT', 'SALDO_FINAL_MES_QTD',
-                       'SALDO_FINAL_MES_ICMS', 'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
+                       'SALDO_FINAL_MES_ICMS', 'ALIQUOTA', 'VALOR', 'DESCRICAO', 'N C M', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
                        'Valor Complementar', 'Valor ICMS Substituição Tributária', 'Valor ICMS Operação', 'valor_op_fixo',
                        'qtd_fixa', 'valor_medio', 'ICMS_EFETIVO_ENTRADA',
                        'CNPJ EMITENTE', 'vBCST', 'CST',

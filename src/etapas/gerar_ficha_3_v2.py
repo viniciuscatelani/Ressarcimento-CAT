@@ -57,10 +57,14 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpj_produtos = "62978978000180"
     cnpjs = [cnpj]
 
+if nome_empresa.lower() == 'tobras':
+    cnpj = "05759383001686"
+    cnpj_produtos = None
+    cnpjs = [cnpj]
 
 try:
     tabela_2 = ler_arquivo_para_dataframe(
-        bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+        bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2021_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
 
 except:
     tabela_2_p1 = ler_arquivo_para_dataframe(
@@ -76,21 +80,7 @@ tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
 
 ficha_3 = calcular_ressarcimento(tabela_2, cnpj_produtos)
 
-gti = input('Precisa de GTI?: ')
-
-if gti.lower() == 'sim':
-
-    meta_ = input('Qual é o valor da meta de ressarcimento ?: ')
-    meta = float(meta_)
-    if ficha_3['VLR_RESSARCIMENTO'].sum() < meta:
-        top_prods = input('Qual o top de produtos para a conta?: ')
-        ficha_3_final = gti_pra_cima(
-            ficha_3, meta_ressarc=meta, top_prods=int(top_prods), cnpj_produtos=cnpj_produtos)
-    else:
-        # ficha_3_final = gti_pra_cima(ficha_3, meta_ressarc=meta)
-        ficha_3_final = ficha_3
-else:
-    ficha_3_final = ficha_3
+ficha_3_final = ficha_3
 
 print('Ressarcimento total:', f"R$ {ficha_3_final['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
     ',', 'v').replace('.', ',').replace('v', '.'))
@@ -117,5 +107,5 @@ if ficha_3_final.shape[0] > 1000000:
     salvar_dataframe_no_s3(ficha_3_final_p3, bucket_name=bucket_name, s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_p3_v2.xlsx',
                            file_type='xlsx')
 else:
-    salvar_dataframe_no_s3(ficha_3_final, bucket_name=bucket_name, s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_{nome_empresa.title()}_{cnpj}_v2.xlsx',
+    salvar_dataframe_no_s3(ficha_3_final, bucket_name=bucket_name, s3_key=f'Cat42/{nome_empresa.title()}/Ficha 3/ficha_3_2021{nome_empresa.title()}_{cnpj}_v2.xlsx',
                            file_type='xlsx')
