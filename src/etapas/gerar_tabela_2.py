@@ -47,7 +47,7 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'tobras':
-    cnpj = "05759383001686"
+    cnpj = "05759383002062"
     cnpjs = [cnpj]
 
 engine = create_engine(
@@ -510,13 +510,13 @@ cfops = [1102, 1202, 1403, 1409, 1411,
         6659]
 
 
-tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)) & (tabela_2['CEST'].notnull()),
-                                 1,
-                                 0)
-
-# tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)),
+# tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)) & (tabela_2['CEST'].notnull()),
 #                                  1,
-#                                  0)  # a ser usado para a empresa Tobras
+#                                  0)
+
+tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)),
+                                 1,
+                                 0)  # a ser usado para a empresa Tobras
 print('Linhas da tabela 2:', tabela_2.shape[0])
 # Preenchimento das colunas CNPJ EMITENTE e CNPJ DESTINATARIO
 
@@ -663,13 +663,14 @@ tabela_2['SUB_TIPO'] = tabela_2['SUB_TIPO'].astype(int)
 
 conditions = [
     (tabela_2['CST'] == 40) & (tabela_2['IND_OPER'] == 1),
-    tabela_2['CFOP'].isin([2411, 6102, 6152, 6404, 6409, 6108, 6117, 6655, 6656]),
+    tabela_2['CFOP'].isin([2411, 6102, 6152, 6404, 6409, 6108, 6117, 6655, 6656, 6659]),
     tabela_2['CFOP'].isin([1202, 2202, 5102, 5152, 5201, 5210, 5409,
                            5410, 5413, 5556, 5910, 5922,
                            5949, 6202, 6922, 6403, 6910, 
-                           1661, 1662, 5659, 5663, 5934, 6659]),
+                           1661, 1662, 5659, 5663, 5934,
+                           5655, 5665]),
     (tabela_2['CFOP'] == 5927),
-    (tabela_2['CFOP'].isin([5405, 1411, 5655, 5656, 5665, 5949])),
+    (tabela_2['CFOP'].isin([5405, 1411, 5655, 5656, 5949])),
     (tabela_2['CFOP'].isin([5117, 5120, 5929])) & (tabela_2['CST'] == 60),
     tabela_2['ALIQUOTA'].isnull(),
     (tabela_2['CFOP'].isin([1102, 2102, 1403,
