@@ -26,7 +26,7 @@ def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv', sep=None):
         response = s3.get_object(Bucket=bucket_name, Key=s3_key)
         if file_type == 'csv':
             df = pd.read_csv(
-                BytesIO(response['Body'].read()), dtype=str, header=0, sep=sep)
+                BytesIO(response['Body'].read()), dtype=str, header=0, sep=sep, encoding='utf-8')
         elif file_type == 'xlsx':
             df = pd.read_excel(BytesIO(response['Body'].read()))
         else:

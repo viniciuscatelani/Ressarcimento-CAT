@@ -58,7 +58,7 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'tobras':
-    cnpj = "05759383002062"
+    cnpj = "05759383001686"
     cnpj_produtos = None
     cnpjs = [cnpj]
 
@@ -96,17 +96,25 @@ if gti.lower() == 'sim':
 else:
     ficha_3_final = ficha_3
 
-print('Ressarcimento total:', f"R$ {ficha_3_final['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
-    ',', 'v').replace('.', ',').replace('v', '.'))
-print('Complemento total:', f"R$ {ficha_3_final['VLR_COMPLEMENTO'].sum():,.2f}".replace(
-    ',', 'v').replace('.', ',').replace('v', '.'))
+grouped_per_year = ficha_3_final.copy()
+grouped_per_year['DATA'] = pd.to_datetime(grouped_per_year['DATA'])
+grouped_per_year['ANO'] = grouped_per_year['DATA'].dt.year
+grouped_per_year = grouped_per_year.groupby(['ANO', 'COD_LEGAL']).agg({'VLR_RESSARCIMENTO': 'sum', 'VLR_COMPLEMENTO': 'sum'}).reset_index()
 
-print('Ressarcimento total CE 1:', f"R$ {ficha_3_final[ficha_3_final['COD_LEGAL'] == 1]['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
-    ',', 'v').replace('.', ',').replace('v', '.'))
-print('Ressarcimento total CE 2:', f"R$ {ficha_3_final[ficha_3_final['COD_LEGAL'] == 2]['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
-    ',', 'v').replace('.', ',').replace('v', '.'))
-print('Ressarcimento total CE 4:', f"R$ {ficha_3_final[ficha_3_final['COD_LEGAL'] == 4]['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
-    ',', 'v').replace('.', ',').replace('v', '.'))
+print(f'Ressarcimento e Complemento por ano para o CNPJ {cnpj}')
+for year in grouped_per_year['ANO'].unique():
+
+    print(f'Ressarcimento total para o ano de {year}:', f"R$ {grouped_per_year[grouped_per_year['ANO'] == year]['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
+        ',', 'v').replace('.', ',').replace('v', '.'))
+    print(f'Complemento total para o ano de {year}:', f"R$ {grouped_per_year[grouped_per_year['ANO'] == year]['VLR_COMPLEMENTO'].sum():,.2f}".replace(
+        ',', 'v').replace('.', ',').replace('v', '.'))
+
+    print(f'Ressarcimento total CE 1 para o ano de {year}:', f"R$ {grouped_per_year[(grouped_per_year['COD_LEGAL'] == 1) & (grouped_per_year['ANO'] == year)]['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
+        ',', 'v').replace('.', ',').replace('v', '.'))
+    print(f'Ressarcimento total CE 2 para o ano de {year}:', f"R$ {grouped_per_year[(grouped_per_year['COD_LEGAL'] == 2) & (grouped_per_year['ANO'] == year)]['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
+        ',', 'v').replace('.', ',').replace('v', '.'))
+    print(f'Ressarcimento total CE 4 para o ano de {year}:', f"R$ {grouped_per_year[(grouped_per_year['COD_LEGAL'] == 4) & (grouped_per_year['ANO'] == year)]['VLR_RESSARCIMENTO'].sum():,.2f}".replace(
+        ',', 'v').replace('.', ',').replace('v', '.'))
 
 if ficha_3_final.shape[0] > 1000000:
     ficha_3_final_p1 = ficha_3_final[:ficha_3_final.shape[0]//3]

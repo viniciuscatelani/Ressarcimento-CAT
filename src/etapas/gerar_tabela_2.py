@@ -47,7 +47,7 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'tobras':
-    cnpj = "05759383002062"
+    cnpj = "05759383001686"
     cnpjs = [cnpj]
 
 engine = create_engine(
@@ -69,7 +69,17 @@ print("✅ Cliente S3 autenticado com sucesso!")
 tabela_1 = ler_arquivo_para_dataframe(
     bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
 
-print(tabela_1.columns)
+tabela_1.columns = ['Chave Acesso NFe', 'Tipo', 'Data Emissão', 'Número Item',
+       'Código Produto ou Serviço', 'Descrição Produto', 'CFOP',
+       'Quantidade Comercial', 'Unidade Comercial', 'Valor Produto ou Serviço',
+       'Valor Desconto Incondicional', 'Valor Total NFE do Produto',
+       'Código GTIN', 'Código NCM', 'CEST', 'Número CNPJ Emitente',
+       'Número CNPJ Destinatário', 'Valor Total IPI', 'CST ICMS',
+       'Valor ICMS Operação', 'Valor ICMS Substituição Tributária',
+       'Valor Base Cálculo ICMS Substituição Tributária',
+       'Valor Base de Cálculo ICMS ST Retido', 'Valor ICMS Substituto',
+       'Valor ICMS ST Retido']
+
 tabela_1 = tabela_1.dropna(subset='Número Item')
 tabela_1 = tabela_1.drop_duplicates()
 
@@ -145,14 +155,14 @@ tabela_1['Data Emissão'] = pd.to_datetime(
     tabela_1['Data Emissão'], format='mixed')
 
 # Formatação da coluna Valor Produto ou Serviço para o tipo correto
-print(tabela_1['Valor Produto ou Serviço'].unique())
-tabela_1['Valor Produto ou Serviço'] = tabela_1['Valor Produto ou Serviço'].astype(
+tabela_1['Valor Produto ou Serviço'] = tabela_1['Valor Produto ou Serviço'].astype(str).str.replace(',', '.').astype(
     float)
 
 # Preenchimento da coluna bc_complementar_total_complementar
 
 tabela_1['Número Item'] = tabela_1['Número Item'].str.replace(
     "{'valor': ", '').str.replace('}', '').str.replace("'", '').astype(float)
+
 tabela_1['Chave Acesso NFe'] = tabela_1['Chave Acesso NFe'].astype(str)
 
 complementar_final['Item NFE Origem'] = complementar_final['Item NFE Origem'].astype(
@@ -223,7 +233,8 @@ merged['CHAVE_ITEM'] = merged['Chave Acesso NFe'].astype(
 duplicate_mask = merged['CHAVE_ITEM'].duplicated(keep=False)
 duplicate_df = merged[duplicate_mask]
 if duplicate_df.shape[0] > 0:
-    print('❌Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
+    print(duplicate_df)
+    print('❌1- Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
     sys.exit()
 
 # Leitura para um dataframe da tabela de produtos
@@ -321,7 +332,8 @@ df_merged['CHAVE_ITEM'] = df_merged['Chave Acesso NFe'].astype(
 duplicate_mask = df_merged['CHAVE_ITEM'].duplicated(keep=False)
 duplicate_df = df_merged[duplicate_mask]
 if duplicate_df.shape[0] > 0:
-    print('❌Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
+    print(duplicate_df)
+    print('❌2- Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
     sys.exit()
 
 df_merged = df_merged.drop_duplicates()
@@ -350,8 +362,8 @@ except:
         float).fillna(0)
     
 df['Valor ICMS Operação'] = df['Valor ICMS Operação'].astype(float).fillna(0)
-df['Valor ICMS ST Retido'] = df['Valor ICMS ST Retido'].astype(float).fillna(0)
-df['Valor ICMS Substituto'] = df['Valor ICMS Substituto'].astype(
+df['Valor ICMS ST Retido'] = df['Valor ICMS ST Retido'].astype(str).str.replace(',', '.').astype(float).fillna(0)
+df['Valor ICMS Substituto'] = df['Valor ICMS Substituto'].astype(str).str.replace(',', '.').astype(
     float).fillna(0)
 df['icms'] = df['icms'].astype(str).replace('None', np.nan)
 
@@ -542,7 +554,7 @@ tabela_2['Valor ICMS Substituição Tributária'] = df['Valor ICMS Substituiçã
 tabela_2['Valor ICMS ST Retido'] = df['Valor ICMS ST Retido']
 tabela_2['Valor ICMS Substituto'] = df['Valor ICMS Substituto']
 tabela_2['QTD_CAT'] = tabela_2['QTD_CAT'].replace('nan', np.nan)
-tabela_2['CST'] = df['CST ICMS']
+tabela_2['CST'] = df['CST ICMS'].astype(str).str.replace(',', '.')
 
 # Preenchimento da coluna ICMS_TOT
 tabela_2['Valor ICMS Operação'] = np.where((tabela_2['FONTE'] == 'entrada') & (~tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)),
@@ -607,7 +619,7 @@ tabela_2['ICMS_TOT'] = np.where(
 )
 
 cond_1 = tabela_2['CFOP'].astype(int).isin([1102, 2102, 1664, 1922])
-cond_2 = (tabela_2['CST'].astype(float) != 60) & (tabela_2['CFOP'].astype(int).isin([1949]))
+cond_2 = (tabela_2['CST'].astype(str).str.replace(',', '.').astype(float) != 60) & (tabela_2['CFOP'].astype(int).isin([1949]))
 
 tabela_2['ICMS_TOT'] = np.where(cond_1 | cond_2,
                                 np.nan,
@@ -722,9 +734,9 @@ cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_I
 #                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
 #     sys.exit()
 
-# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2022-01-01') & (tabela_2['DATA'] <= '2022-12-31')]
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2023-01-01')]
 # data = tabela_2['DATA'].astype(str).iloc[0][:4]
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
+# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',
                           'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT', 'ICMS_TOT_SAIDA', 'VL_CONFR_0', 'COD_LEGAL',
                           'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
@@ -763,17 +775,12 @@ tabela_2_final['CHAVE_ITEM'] = tabela_2_final['CHV_DOC'].astype(
 duplicate_mask = tabela_2_final['CHAVE_ITEM'].duplicated(keep=False)
 duplicate_df = tabela_2_final[duplicate_mask]
 if duplicate_df.shape[0] > 0:
-    print('❌Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
+    print(duplicate_df)
+    print('❌3- Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
     sys.exit()
 
 tabela_2_final['CHAVE_ITEM'] = tabela_2_final['CHV_DOC'].astype(
     str) + '-' + tabela_2_final['NUM_ITEM'].astype(str)
-
-duplicate_mask = tabela_2_final['CHAVE_ITEM'].duplicated(keep=False)
-duplicate_df = tabela_2_final[duplicate_mask]
-if duplicate_df.shape[0] > 0:
-    print('❌Erro encontrado: combinação Chave-Item duplicada. Por favor verificar')
-    sys.exit()
 
 tabela_2_final['ICMS_TOT'] = np.where(tabela_2_final['CFOP'].isin(
     [1102, 2102]), np.nan, tabela_2_final['ICMS_TOT'])
@@ -799,4 +806,4 @@ if tabela_2_final.shape[0] > 1000000:
 else:
     salvar_dataframe_no_s3(tabela_2_final,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2023_2024{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
