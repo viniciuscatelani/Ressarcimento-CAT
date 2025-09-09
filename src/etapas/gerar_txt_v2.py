@@ -147,7 +147,7 @@ planilha.loc[planilha['CEST'].str.len() == 6, 'CEST'] = '0' + planilha['CEST']
 planilha['CEST'] = planilha['CEST'].replace('', np.nan)
 
 planilha['N C M'] = planilha['N C M'].apply(
-    lambda x: str(x).zfill(8) if len(str(x)) < 8 else str(x))
+    lambda x: str(x).zfill(8) if len(str(x)) < 8 else str(x[:8]))
 
 planilha['CODIGO_BARRA'] = planilha['CODIGO_BARRA'].replace(
     'SEM GTIN      ', np.nan)
