@@ -42,7 +42,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
 
     if cnpj_produtos == None:
         # leitura do arquivo com as informações
-        produtos = pd.read_excel('TABELA DE PRODUTOS_TOBRAS.xlsx')
+        produtos = pd.read_excel('C:/Users/vinic/Downloads/TABELA DE PRODUTOS_TOBRAS_ATUALIZADA.xlsx')
 
         # adição de colunas com informações nulas
         produtos['empresa'] = np.nan

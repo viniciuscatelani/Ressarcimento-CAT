@@ -18,7 +18,8 @@ warnings.filterwarnings('ignore')
 from src.utils.ler_arquivos import ler_arquivo_para_dataframe
 
 # Carregando variáveis de ambiente
-dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.env'))
+dotenv_path = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '../../.env'))
 print(f"Carregando .env de: {dotenv_path}")
 load_dotenv(dotenv_path, override=True)
 
@@ -30,6 +31,18 @@ if nome_empresa.lower() == 'tateti':
 
 if nome_empresa.lower() == 'ladakh':
     cnpj = "07318052000150"
+
+if nome_empresa.lower() == 'sonda':
+    cnpj = "01937635001316"
+
+if nome_empresa.lower() == 'mensa':
+    cnpj = "10290457000484"
+
+if nome_empresa.lower() == 'casa mimosa':
+    cnpj = "62978978000180"
+
+if nome_empresa.lower() == 'tobras':
+    cnpj = "05759383001414"
 
 connection = psycopg2.connect(
         user=  'cat',

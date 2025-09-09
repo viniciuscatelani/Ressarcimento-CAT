@@ -19,7 +19,7 @@ warnings.filterwarnings('ignore')
 
 # Carregando variáveis de ambiente
 dotenv_path = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', '.env'))
+    os.path.dirname(__file__), '../../.env'))
 print(f"Carregando .env de: {dotenv_path}")
 load_dotenv(dotenv_path, override=True)
 
@@ -32,6 +32,22 @@ if nome_empresa.lower() == 'tateti':
 
 if nome_empresa.lower() == 'ladakh':
     cnpj = "07318052000150"
+    cnpjs = [cnpj]
+
+if nome_empresa.lower() == 'sonda':
+    cnpj = "01937635001316"
+    cnpj_produtos = "01937635001316"
+
+if nome_empresa.lower() == 'mensa':
+    cnpj = "10290457000484"
+    cnpj_produtos = "10290457000212"
+
+if nome_empresa.lower() == 'casa mimosa':
+    cnpj = "62978978000180"
+    cnpjs = [cnpj]
+
+if nome_empresa.lower() == 'tobras':
+    cnpj = "05759383002062"
     cnpjs = [cnpj]
 
 connection = psycopg2.connect(
@@ -63,9 +79,11 @@ tabela_2 = ler_arquivo_para_dataframe(
 tabela_2 = tabela_2.sort_values(by=['COD_ITEM', 'DATA', 'IND_OPER', 'SUB_TIPO'],
                                 ascending=[True, True, True, True])
 
-planilha = planilha.merge(tabela_2[['CHV_DOC', 'NUM_ITEM', 'DESCRICAO', 'CODIGO_BARRA', 'UNIDADE', 'N C M', 'CEST',
+planilha = planilha.merge(tabela_2[['CHV_DOC', 'NUM_ITEM', 'CODIGO_BARRA', 'UNIDADE', 'CEST',
                                     'CNPJ DESTINATARIO']],
                           on=['CHV_DOC', 'NUM_ITEM'], how='left')
+
+# print(planilha.columns)
 
 planilha['COD_ITEM'] = planilha['COD_ITEM'].astype(str)
 planilha['DESCRICAO'] = planilha['DESCRICAO'].str.replace('"', "'")
@@ -84,7 +102,7 @@ planilha['CEST'] = planilha['CEST'].astype('Int64')
 # Caso deseje substituir valores '<NA>' por np.nan, use:
 planilha['CEST'] = planilha['CEST'].astype(str).replace('<NA>', np.nan)
 
-planilha['CNPJ EMITENTE'] = pd.to_numeric(planilha['CNPJ EMITENTE'])
+planilha['CNPJ EMITENTE'] = pd.to_numeric(planilha['CNPJ EMITENTE'].astype(str).str.replace(',', '.'))
 planilha['CNPJ EMITENTE'] = planilha['CNPJ EMITENTE'].astype(
     'Int64').astype(str).replace('<NA>', np.nan)
 
@@ -505,7 +523,7 @@ for date in planilha['Data'].unique():
             print(mensagem)
             print(
                 f'❌O participante faltante no 0150 tem CNPJ {cnpj_}, para o mês {date}')
-            sys.exit()
+            # sys.exit()
 
     df_1100_ = df_1100_[['COD_REG', 'CHV_DOC', 'DATA', 'NUM_ITEM', 'IND_OPER',
                          'COD_ITEM', 'CFOP', 'QTD_FIN', 'ICMS_TOT_PCAT', 'VLR_CONFR_PCAT', 'COD_LEGAL']]
@@ -543,7 +561,7 @@ for date in planilha['Data'].unique():
                                bucket_name=bucket_name,
                                path=f'Cat42/{nome_empresa.title()}/Txts/Teste_CNPJ_{cnpj}/1100_{date}_{cnpj}_v2.txt')
     print(
-        f'Gerado o arquivo 1100 e salvo em Cat42/{nome_empresa.title()}/Txts/Teste_CNPJ_{cnpj}/1100_{date}_{cnpj}_v2txt')
+        f'Gerado o arquivo 1100 e salvo em Cat42/{nome_empresa.title()}/Txts/Teste_CNPJ_{cnpj}/1100_{date}_{cnpj}_v2.txt')
 
     # Geração de um arquivo .txt único,
     # contendo todas as informações das documentações

@@ -47,7 +47,7 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'tobras':
-    cnpj = "05759383001686"
+    cnpj = "05759383002062"
     cnpjs = [cnpj]
 
 engine = create_engine(
@@ -67,7 +67,7 @@ print("✅ Cliente S3 autenticado com sucesso!")
 
 # Leitura da tabela 1 gerada em etapa anterior
 tabela_1 = ler_arquivo_para_dataframe(
-    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
+    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tb1_{cnpj}.csv', file_type='csv', sep=';')
 
 tabela_1.columns = ['Chave Acesso NFe', 'Tipo', 'Data Emissão', 'Número Item',
        'Código Produto ou Serviço', 'Descrição Produto', 'CFOP',
@@ -242,7 +242,7 @@ if duplicate_df.shape[0] > 0:
 
 if nome_empresa == 'tobras':
     # leitura do arquivo com as informações
-    produtos = pd.read_excel('TABELA DE PRODUTOS_TOBRAS.xlsx')
+    produtos = pd.read_excel('C:/Users/vinic/Downloads/TABELA DE PRODUTOS_TOBRAS_ATUALIZADA.xlsx')
 
     # adição de colunas com informações nulas
     produtos['empresa'] = np.nan
@@ -313,6 +313,7 @@ merged_novo = pd.concat([df_1,  df_2, df_3])
 
 merged_novo['IND_OPER'] = np.where((merged_novo['Tipo'] == 'saida'),
                                    1, 0)
+merged_novo['CFOP'] = merged_novo['CFOP'].astype(str).str.replace(',', '.').astype(float)
 
 merged_novo = merged_novo.drop_duplicates()
 merged_novo['Produto'] = np.where((merged_novo['Tipo'] == 'entrada') & (~merged_novo['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)) & (merged_novo['CFOP'].astype(float) != 5409),
@@ -529,6 +530,7 @@ cfops = [1102, 1202, 1403, 1409, 1411,
 tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)),
                                  1,
                                  0)  # a ser usado para a empresa Tobras
+
 print('Linhas da tabela 2:', tabela_2.shape[0])
 # Preenchimento das colunas CNPJ EMITENTE e CNPJ DESTINATARIO
 
@@ -708,8 +710,23 @@ tabela_2['VL_CONFR_0'] = np.where(tabela_2['COD_LEGAL'] == 0,
 
 # Substituição dos valores nulos de aliquota por 0
 
-tabela_2['ALIQUOTA'] = tabela_2['ALIQUOTA'].astype(
-    str).replace('nan', np.nan).fillna(0).astype(float)
+if nome_empresa == 'tobras':
+    conditions = [tabela_2['COD_ITEM'].astype(int).isin([100302]),
+              tabela_2['COD_ITEM'].astype(int).isin([100101]),
+              tabela_2['COD_ITEM'].astype(int).isin([100203, 100206])]
+
+    values = [np.where(('2021-01-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2023-01-15'), 13.3, 12),
+            np.where(('2021-01-15' <= tabela_2['DATA']) &
+                    (tabela_2['DATA'] <= '2022-06-27'), 25, 18),
+            np.where(('2021-01-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2022-07-14'), 13.3,
+                    np.where(('2022-07-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2023-06-30'),
+                                9.57,
+                                12))]
+else:
+    tabela_2['ALIQUOTA'] = np.select(
+        conditions, values, default=18)
+    tabela_2['ALIQUOTA'] = tabela_2['ALIQUOTA'].astype(
+        str).replace('nan', np.nan).fillna(0).astype(float)
 
 # Criação de coluna para checagem de erro em fator de conversão
 
@@ -734,7 +751,7 @@ cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_I
 #                            s3_key=f'Cat42/{nome_empresa.title()}/cods_a_verificar_{nome_empresa}_{cnpj}.xlsx', file_type='xlsx')
 #     sys.exit()
 
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2023-01-01')]
+# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2023-01-01')]
 # data = tabela_2['DATA'].astype(str).iloc[0][:4]
 # tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',
@@ -806,4 +823,4 @@ if tabela_2_final.shape[0] > 1000000:
 else:
     salvar_dataframe_no_s3(tabela_2_final,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_2023_2024{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')

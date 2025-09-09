@@ -58,7 +58,7 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'tobras':
-    cnpj = "05759383001686"
+    cnpj = "05759383002062"
     cnpj_produtos = None
     cnpjs = [cnpj]
 
