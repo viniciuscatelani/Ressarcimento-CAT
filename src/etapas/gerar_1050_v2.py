@@ -36,7 +36,7 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpj = "62978978000180"
 
 if nome_empresa.lower() == 'tobras':
-    cnpj = "05759383002062"
+    cnpj = "05759383001686"
 
 # Variáveis para acesso ao s3
 bucket_name = '4btaxtech'

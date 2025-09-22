@@ -38,7 +38,7 @@ if nome_empresa.lower() == 'sonda':
 
 if nome_empresa.lower() == 'mensa':
     cnpj = "10290457000484"
-    cnpj_produtos = "10290457000212"
+    cnpj_produtos = "10290457000484"
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'casa mimosa':
@@ -67,18 +67,18 @@ print("✅ Cliente S3 autenticado com sucesso!")
 
 # Leitura da tabela 1 gerada em etapa anterior
 tabela_1 = ler_arquivo_para_dataframe(
-    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tb1_{cnpj}.csv', file_type='csv', sep=';')
+    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
 
-tabela_1.columns = ['Chave Acesso NFe', 'Tipo', 'Data Emissão', 'Número Item',
-       'Código Produto ou Serviço', 'Descrição Produto', 'CFOP',
-       'Quantidade Comercial', 'Unidade Comercial', 'Valor Produto ou Serviço',
-       'Valor Desconto Incondicional', 'Valor Total NFE do Produto',
-       'Código GTIN', 'Código NCM', 'CEST', 'Número CNPJ Emitente',
-       'Número CNPJ Destinatário', 'Valor Total IPI', 'CST ICMS',
-       'Valor ICMS Operação', 'Valor ICMS Substituição Tributária',
-       'Valor Base Cálculo ICMS Substituição Tributária',
-       'Valor Base de Cálculo ICMS ST Retido', 'Valor ICMS Substituto',
-       'Valor ICMS ST Retido']
+# tabela_1 = tabela_1[['Chave Acesso NFe', 'Tipo', 'Data Emissão', 'Número Item',
+#        'Código Produto ou Serviço', 'Descrição Produto', 'CFOP',
+#        'Quantidade Comercial', 'Unidade Comercial', 'Valor Produto ou Serviço',
+#        'Valor Desconto Incondicional', 'Valor Total NFE do Produto',
+#        'Código GTIN', 'Código NCM', 'CEST', 'Número CNPJ Emitente',
+#        'Número CNPJ Destinatário', 'Valor Total IPI', 'CST ICMS',
+#        'Valor ICMS Operação', 'Valor ICMS Substituição Tributária',
+#        'Valor Base Cálculo ICMS Substituição Tributária',
+#        'Valor Base de Cálculo ICMS ST Retido', 'Valor ICMS Substituto',
+#        'Valor ICMS ST Retido']]
 
 tabela_1 = tabela_1.dropna(subset='Número Item')
 tabela_1 = tabela_1.drop_duplicates()
@@ -462,7 +462,7 @@ tabela_2['FONTE'] = df['Tipo']
 if nome_empresa == 'mensa':
     tabela_2_cols = tabela_2.columns
     fat_conv = pd.read_excel(
-        'Fator_Mensa_Original.xlsx')
+        'C:/Users/vinic/fator_oficial.xlsx')
     fat_conv['CODPROD'] = fat_conv['CODPROD'].astype(str)
     tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
     print('Tamanho tabela 2 pré-merge:', tabela_2.shape)
@@ -471,11 +471,9 @@ if nome_empresa == 'mensa':
                               right_on=['CODPROD', 'CODVOL'],
                               how='left').drop_duplicates()
     print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
-    tabela_2['QTDUNIDADE'] = tabela_2['QTDUNIDADE'].fillna(1)
-    tabela_2['QTD_CAT'] = np.where(tabela_2['DIVIDEMULTIPLICA'] == 'M',
-                                   tabela_2['QTD_NOTA'].astype(
-        float) * tabela_2['QTDUNIDADE'].astype(float),
-        tabela_2['QTD_NOTA'].astype(float) / tabela_2['QTDUNIDADE'].astype(float))
+    tabela_2['QTD_CAT'] = np.where(tabela_2['QTDUNIDADE'].notnull(),
+                                   tabela_2['QTDUNIDADE'].astype(float),
+                                   tabela_2['QTD_NOTA'].astype(float))
 
     tabela_2 = tabela_2[tabela_2_cols]
 
@@ -753,7 +751,7 @@ cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_I
 
 # tabela_2 = tabela_2[(tabela_2['DATA'] >= '2023-01-01')]
 # data = tabela_2['DATA'].astype(str).iloc[0][:4]
-# tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2019-07-01') & (tabela_2['DATA'] <= '2023-12-31')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',
                           'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT', 'ICMS_TOT_SAIDA', 'VL_CONFR_0', 'COD_LEGAL',
                           'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',

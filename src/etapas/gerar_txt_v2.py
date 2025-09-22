@@ -47,15 +47,15 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'tobras':
-    cnpj = "05759383002062"
+    cnpj = "05759383001686"
     cnpjs = [cnpj]
 
 connection = psycopg2.connect(
-    user='cat',
-    password='5pM2h0MBQu9JHkxHud2A',
-    host='177.11.49.194',
+    user=os.getenv('DATABASE_USER'),
+    password=os.getenv('DATABASE_PASS'),
+    host=os.getenv('DATABASE_HOST'),
     port="3361",
-    database='4btaxtech'
+    database=os.getenv('DATABASE_NAME')
 )
 
 # Variáveis para acesso ao s3
@@ -83,7 +83,7 @@ planilha = planilha.merge(tabela_2[['CHV_DOC', 'NUM_ITEM', 'CODIGO_BARRA', 'UNID
                                     'CNPJ DESTINATARIO']],
                           on=['CHV_DOC', 'NUM_ITEM'], how='left')
 
-# print(planilha.columns)
+planilha = planilha[(planilha['DATA'] >= '2021-01-01')]
 
 planilha['COD_ITEM'] = planilha['COD_ITEM'].astype(str)
 planilha['DESCRICAO'] = planilha['DESCRICAO'].str.replace('"', "'")
@@ -146,7 +146,7 @@ planilha.loc[planilha['CEST'].str.len() == 6, 'CEST'] = '0' + planilha['CEST']
 
 planilha['CEST'] = planilha['CEST'].replace('', np.nan)
 
-planilha['N C M'] = planilha['N C M'].apply(
+planilha['N C M'] = planilha['N C M'].astype(str).apply(
     lambda x: str(x).zfill(8) if len(str(x)) < 8 else str(x[:8]))
 
 planilha['CODIGO_BARRA'] = planilha['CODIGO_BARRA'].replace(
@@ -336,7 +336,7 @@ df_0000['data'] = df_0000['data'].astype(str).str.slice(0, 10)
 df_0000['data'] = [datetime.strptime(
     x, '%d/%m/%Y').strftime('%m%Y') for x in df_0000['data']]
 df_0000['COD_VER'] = ['01'] * df_0000.shape[0]
-df_0000['COD_FIN'] = ['02'] * df_0000.shape[0]
+df_0000['COD_FIN'] = ['00'] * df_0000.shape[0]
 df_0000 = df_0000[['empresa', 'registro', 'data', 'razao_social', 'cnpj', 'ie',
                    'codigo_municipio', 'COD_VER', 'COD_FIN']]
 
@@ -426,7 +426,6 @@ def recalcular_digito_verificador(nfe_completa):
 
 planilha = planilha[planilha['Data'] != '102019']
 for date in planilha['Data'].unique():
-    # for date in ['112019']:
     # Geração da 0000
     df_0000_ = df_0000[df_0000['data'] == date][df_0000['cnpj'] == f'{cnpj}']
     df_0000_['ie'] = df_0000_['ie'].str.replace('-', '')

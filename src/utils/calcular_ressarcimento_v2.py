@@ -14,11 +14,11 @@ import warnings
 warnings.filterwarnings('ignore')
 
 connection = psycopg2.connect(
-    user='cat',
-    password='5pM2h0MBQu9JHkxHud2A',
-    host='177.11.49.194',
+    user=os.getenv('DATABASE_USER'),
+    password=os.getenv('DATABASE_PASS'),
+    host=os.getenv('DATABASE_HOST'),
     port="3361",
-    database='4btaxtech'
+    database=os.getenv('DATABASE_NAME')
 )
 
 
