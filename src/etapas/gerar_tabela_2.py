@@ -1,5 +1,6 @@
 # Importação das bibliotecas necessárias
 import pandas as pd
+# import dask.dataframe as dd
 import numpy as np
 import psycopg2
 import math
@@ -311,8 +312,8 @@ df_3['Tipo'] = 'saida'
 
 merged_novo = pd.concat([df_1,  df_2, df_3])
 
-merged_novo['IND_OPER'] = np.where((merged_novo['Tipo'] == 'saida'),
-                                   1, 0)
+# merged_novo['IND_OPER'] = np.where((merged_novo['Tipo'] == 'saida'),
+#                                    1, 0)
 merged_novo['CFOP'] = merged_novo['CFOP'].astype(str).str.replace(',', '.').astype(float)
 
 merged_novo = merged_novo.drop_duplicates()
@@ -537,7 +538,8 @@ tabela_2['CNPJ DESTINATARIO'] = df['Número CNPJ Destinatário']
 
 # Preenchimento da coluna IND_OPER
 
-tabela_2['IND_OPER'] = df['IND_OPER']
+tabela_2['IND_OPER'] = np.where((tabela_2['FONTE'] == 'saida'),
+                                   1, 0)
 
 # Preenchimento da coluna VALOR
 tabela_2['VALOR'] = df['Valor Produto ou Serviço'].astype(
@@ -720,11 +722,11 @@ if nome_empresa == 'tobras':
                     np.where(('2022-07-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2023-06-30'),
                                 9.57,
                                 12))]
-else:
-    tabela_2['ALIQUOTA'] = np.select(
-        conditions, values, default=18)
-    tabela_2['ALIQUOTA'] = tabela_2['ALIQUOTA'].astype(
-        str).replace('nan', np.nan).fillna(0).astype(float)
+# else:
+#     tabela_2['ALIQUOTA'] = np.select(
+#         conditions, values, default=18)
+#     tabela_2['ALIQUOTA'] = tabela_2['ALIQUOTA'].astype(
+#         str).replace('nan', np.nan).fillna(0).astype(float)
 
 # Criação de coluna para checagem de erro em fator de conversão
 
