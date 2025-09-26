@@ -11,14 +11,18 @@ import pytz
 import os
 import psycopg2
 import warnings
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
 warnings.filterwarnings('ignore')
 
-connection = psycopg2.connect(
-    user=os.getenv('DATABASE_USER'),
-    password=os.getenv('DATABASE_PASS'),
-    host=os.getenv('DATABASE_HOST'),
-    port="3361",
-    database=os.getenv('DATABASE_NAME')
+# Carregando variáveis de ambiente
+dotenv_path = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '../../.env'))
+print(f"Carregando .env de: {dotenv_path}")
+load_dotenv(dotenv_path, override=True)
+
+engine = create_engine(
+    f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:3361/{os.getenv('DATABASE_NAME')}"
 )
 
 
@@ -69,7 +73,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
             ',', '.').astype(float)*100
     else:
         query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
-        produtos = pd.read_sql_query(query, connection)
+        produtos = pd.read_sql_query(query, engine)
 
     # Ordenação da tabela de acordo com os critérios definidos
     ficha_3['DATA'] = pd.to_datetime(ficha_3['DATA'], format='%Y-%m-%d')
@@ -219,7 +223,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
         query = f"SELECT mva_antes, mva_depois FROM produtos WHERE codigo_produto = '{produto}'"
         try:
             mva = float(pd.read_sql_query(
-                query, connection).dropna(axis=1).iloc[0, 0])
+                query, engine).dropna(axis=1).iloc[0, 0])
         except:
             mva = 0
         # print('MVA: ', mva)

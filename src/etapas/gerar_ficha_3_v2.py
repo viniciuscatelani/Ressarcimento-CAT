@@ -11,6 +11,7 @@ import pytz
 import os
 from dotenv import load_dotenv
 import boto3
+from sqlalchemy import create_engine
 
 from src.utils.calcular_ressarcimento_v2 import calcular_ressarcimento
 from src.utils.calcular_gti import gti_pra_cima, gti_pra_baixo
@@ -50,7 +51,7 @@ if nome_empresa.lower() == 'sonda':
 
 if nome_empresa.lower() == 'mensa':
     cnpj = "10290457000484"
-    cnpj_produtos = "10290457000212"
+    cnpj_produtos = "10290457000484"
 
 if nome_empresa.lower() == 'casa mimosa':
     cnpj = "62978978000180"

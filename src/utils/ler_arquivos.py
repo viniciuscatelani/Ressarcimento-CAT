@@ -29,7 +29,7 @@ def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv', sep=None):
             chunk_size = 100_000
 
             # Isso cria um "iterador", não um DataFrame completo. A memória ainda não foi usada.
-            csv_iterator = pd.read_csv(BytesIO(response['Body'].read()), dtype=str, header=0, sep=sep, encoding='utf-8', chunksize=chunk_size) # Ajuste sep e encoding se necessário
+            csv_iterator = pd.read_csv(response['Body'].read(), dtype=str, header=0, sep=sep, encoding='utf-8', chunksize=chunk_size) # Ajuste sep e encoding se necessário
 
             lista_de_resultados = []
 
