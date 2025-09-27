@@ -462,8 +462,8 @@ tabela_2['FONTE'] = df['Tipo']
 
 if nome_empresa == 'mensa':
     tabela_2_cols = tabela_2.columns
-    fat_conv = pd.read_excel(
-        'C:/Users/vinic/fator_oficial.xlsx')
+    query = 'SELECT * FROM fator_conversao'
+    fat_conv = pd.read_sql_query(query, engine)
     fat_conv['CODPROD'] = fat_conv['CODPROD'].astype(str)
     tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
     print('Tamanho tabela 2 pré-merge:', tabela_2.shape)
