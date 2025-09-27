@@ -464,17 +464,17 @@ if nome_empresa == 'mensa':
     tabela_2_cols = tabela_2.columns
     query = 'SELECT * FROM fator_conversao'
     fat_conv = pd.read_sql_query(query, engine)
-    fat_conv['CODPROD'] = fat_conv['CODPROD'].astype(str)
+    fat_conv['codigo_item'] = fat_conv['codigo_item'].astype(str)
     tabela_2['COD_ITEM'] = tabela_2['COD_ITEM'].astype(str)
     print('Tamanho tabela 2 pré-merge:', tabela_2.shape)
     tabela_2 = tabela_2.merge(fat_conv,
                               left_on=['COD_ITEM', 'UNIDADE'],
-                              right_on=['CODPROD', 'CODVOL'],
+                              right_on=['codigo_item', 'unidade'],
                               how='left').drop_duplicates()
     print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
-    tabela_2['QTDUNIDADE'] = tabela_2['QTDUNIDADE'].fillna(1)
+    tabela_2['fator'] = tabela_2['fator'].fillna(1)
     tabela_2['QTD_CAT'] = np.where(tabela_2['FONTE'] == 'saida',
-                                   tabela_2['QTDUNIDADE'].astype(float) * tabela_2['QTD_NOTA'],
+                                   tabela_2['fator'].astype(float) * tabela_2['QTD_NOTA'],
                                    tabela_2['QTD_CAT'].astype(float))
 
     tabela_2 = tabela_2[tabela_2_cols]
