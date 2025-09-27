@@ -39,7 +39,7 @@ if nome_empresa.lower() == 'sonda':
 
 if nome_empresa.lower() == 'mensa':
     cnpj = "10290457000484"
-    cnpj_produtos = "10290457000484"
+    cnpj_produtos = "10290457000212"
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'casa mimosa':
@@ -472,9 +472,10 @@ if nome_empresa == 'mensa':
                               right_on=['CODPROD', 'CODVOL'],
                               how='left').drop_duplicates()
     print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
-    tabela_2['QTD_CAT'] = np.where(tabela_2['QTDUNIDADE'].notnull(),
-                                   tabela_2['QTDUNIDADE'].astype(float),
-                                   tabela_2['QTD_NOTA'].astype(float))
+    tabela_2['QTDUNIDADE'] = tabela_2['QTDUNIDADE'].fillna(1)
+    tabela_2['QTD_CAT'] = np.where(tabela_2['FONTE'] == 'saida',
+                                   tabela_2['QTDUNIDADE'].astype(float) * tabela_2['QTD_NOTA'],
+                                   tabela_2['QTD_CAT'].astype(float))
 
     tabela_2 = tabela_2[tabela_2_cols]
 

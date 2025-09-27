@@ -4,6 +4,7 @@ import pandas as pd
 # import dask.dataframe as dd
 from io import BytesIO
 import os
+from tqdm import tqdm
 
 # No início do módulo
 bucket_name = '4btaxtech'
@@ -35,12 +36,10 @@ def ler_arquivo_para_dataframe(bucket_name, s3_key, file_type='csv', sep=None):
 
             print("Iniciando o processamento em chunks...")
             # Agora, iteramos sobre o arquivo, pedaço por pedaço
-            for i, chunk in enumerate(csv_iterator):
+            for chunk in tqdm(csv_iterator, desc="Lendo chunks do S3"):
                 
                 # Guarde apenas o resultado que te interessa
                 lista_de_resultados.append(chunk)
-                
-                print(f"Processou um chunk...")
 
             # Ao final, você pode consolidar os resultados
             df = pd.concat(lista_de_resultados)
