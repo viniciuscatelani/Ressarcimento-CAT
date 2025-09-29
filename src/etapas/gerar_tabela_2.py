@@ -473,7 +473,7 @@ if nome_empresa == 'mensa':
                               how='left').drop_duplicates()
     print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
     tabela_2['fator'] = tabela_2['fator'].fillna(1)
-    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'saida') | (df['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)),
+    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'saida') | (tabela_2['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)),
                                    tabela_2['fator'].astype(float) * tabela_2['QTD_NOTA'],
                                    tabela_2['QTD_CAT'].astype(float))
 
