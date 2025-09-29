@@ -56,7 +56,7 @@ engine = create_engine(
 )
 
 # Variáveis para acesso ao s3
-bucket_name = '4btaxtech'
+bucket_name = 'revizia'
 
 s3 = boto3.client('s3',
                   aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -68,7 +68,7 @@ print("✅ Cliente S3 autenticado com sucesso!")
 
 # Leitura da tabela 1 gerada em etapa anterior
 tabela_1 = ler_arquivo_para_dataframe(
-    bucket_name, f'Cat42/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
+    bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
 
 # tabela_1 = tabela_1[['Chave Acesso NFe', 'Tipo', 'Data Emissão', 'Número Item',
 #        'Código Produto ou Serviço', 'Descrição Produto', 'CFOP',
@@ -473,7 +473,7 @@ if nome_empresa == 'mensa':
                               how='left').drop_duplicates()
     print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
     tabela_2['fator'] = tabela_2['fator'].fillna(1)
-    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'saida') | (tabela_2['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)),
+    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'saida') | (tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)),
                                    tabela_2['fator'].astype(float) * tabela_2['QTD_NOTA'],
                                    tabela_2['QTD_CAT'].astype(float))
 
