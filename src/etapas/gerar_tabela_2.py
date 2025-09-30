@@ -340,7 +340,7 @@ if duplicate_df.shape[0] > 0:
 
 df_merged = df_merged.drop_duplicates()
 
-df = df_merged.copy()
+df = df_merged.copy().reset_index(drop=True)
 
 # Renomeação de colunas de acordo com o necessário
 df.rename(columns={
@@ -349,7 +349,7 @@ df.rename(columns={
 
 # Retirada de linhas duplicadas
 
-df = df.drop_duplicates()
+df = df.drop_duplicates().reset_index(drop=True)
 
 # Preenchimento da coluna ICMS_TOT
 df['Valor Base Cálculo ICMS ST Retido Operação Anterior'] = df['Valor Base Cálculo ICMS ST Retido Operação Anterior'].fillna(
@@ -373,7 +373,7 @@ df['icms'] = df['icms'].str.replace(
     '-', '0').fillna('0').str.replace('nan', '0')
 df['vBCST'] = df['vBCST'].astype(float).fillna(0)
 
-df = df.loc[:, ~df.columns.duplicated(keep='first')]
+df = df.loc[:, ~df.columns.duplicated(keep='first')].reset_index(drop=True)
 # Geração da coluna CHV_DOC
 tabela_2 = pd.DataFrame()
 
@@ -470,12 +470,12 @@ if nome_empresa == 'mensa':
     tabela_2 = tabela_2.merge(fat_conv,
                               left_on=['COD_ITEM', 'UNIDADE'],
                               right_on=['codigo_item', 'unidade'],
-                              how='left').drop_duplicates()
+                              how='left').drop_duplicates().reset_index(drop=True)
     print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
     tabela_2['fator'] = tabela_2['fator'].fillna(1)
-    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'saida') | (tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)),
-                                   tabela_2['fator'].astype(float) * tabela_2['QTD_NOTA'],
-                                   tabela_2['QTD_CAT'].astype(float))
+    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'saida') | ((tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)) & (tabela_2['FONTE']=='entrada')),
+                                   tabela_2['fator'].astype(float) * tabela_2['QTD_NOTA'].astype(float),
+                                   tabela_2['QTD_EFD'].astype(float))
 
     tabela_2 = tabela_2[tabela_2_cols]
 
@@ -812,15 +812,15 @@ if tabela_2_final.shape[0] > 1000000:
 
     salvar_dataframe_no_s3(tabela_2_final_p1,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
+                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
     salvar_dataframe_no_s3(tabela_2_final_p2,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
+                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
     salvar_dataframe_no_s3(tabela_2_final_p3,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
+                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
 
 else:
     salvar_dataframe_no_s3(tabela_2_final,
                            bucket_name,
-                           s3_key=f'Cat42/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
