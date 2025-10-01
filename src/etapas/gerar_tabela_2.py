@@ -52,7 +52,8 @@ if nome_empresa.lower() == 'tobras':
     cnpjs = [cnpj]
 
 engine = create_engine(
-    f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:3361/{os.getenv('DATABASE_NAME')}"
+    f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:3361/{os.getenv('DATABASE_NAME')}",
+    pool_recycle=1800
 )
 
 # Variáveis para acesso ao s3
@@ -181,17 +182,19 @@ merged_df = merged_df.drop_duplicates()
 # Preenchimento da coluna bc_complementar_total_item_original
 
 try:
-    merged_df['Valor Base de Cálculo ICMS ST Retido'] = merged_df['Valor Base de Cálculo ICMS ST Retido'].astype(float).fillna(0)
+    merged_df['Valor Base de Cálculo ICMS ST Retido'] = merged_df['Valor Base de Cálculo ICMS ST Retido'].astype(
+        float).fillna(0)
 except:
     merged_df['Valor Base de Cálculo ICMS ST Retido'] = merged_df['Valor Base de Cálculo ICMS ST Retido'].astype(str).str.replace('.', '').str.replace(
-            ',', '.').str.replace('R$ ', '').str.strip().astype(
+        ',', '.').str.replace('R$ ', '').str.strip().astype(
         float).fillna(0)
-    
-try: 
-    merged_df['Valor ICMS Operação'] = merged_df['Valor ICMS Operação'].astype(float).fillna(0)
+
+try:
+    merged_df['Valor ICMS Operação'] = merged_df['Valor ICMS Operação'].astype(
+        float).fillna(0)
 except:
     merged_df['Valor ICMS Operação'] = merged_df['Valor ICMS Operação'].astype(str).str.replace('.', '').str.replace(
-            ',', '.').str.replace('R$ ', '').str.strip().astype(
+        ',', '.').str.replace('R$ ', '').str.strip().astype(
         float).fillna(0)
 
 merged_df['bc_complementar_total_item_original'] = merged_df['ICMS ST Retido-Base de Cálculo']
@@ -243,7 +246,8 @@ if duplicate_df.shape[0] > 0:
 
 if nome_empresa == 'tobras':
     # leitura do arquivo com as informações
-    produtos = pd.read_excel('C:/Users/vinic/Downloads/TABELA DE PRODUTOS_TOBRAS_ATUALIZADA.xlsx')
+    produtos = pd.read_excel(
+        'C:/Users/vinic/Downloads/TABELA DE PRODUTOS_TOBRAS_ATUALIZADA.xlsx')
 
     # adição de colunas com informações nulas
     produtos['empresa'] = np.nan
@@ -314,7 +318,8 @@ merged_novo = pd.concat([df_1,  df_2, df_3])
 
 # merged_novo['IND_OPER'] = np.where((merged_novo['Tipo'] == 'saida'),
 #                                    1, 0)
-merged_novo['CFOP'] = merged_novo['CFOP'].astype(str).str.replace(',', '.').astype(float)
+merged_novo['CFOP'] = merged_novo['CFOP'].astype(
+    str).str.replace(',', '.').astype(float)
 
 merged_novo = merged_novo.drop_duplicates()
 merged_novo['Produto'] = np.where((merged_novo['Tipo'] == 'entrada') & (~merged_novo['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)) & (merged_novo['CFOP'].astype(float) != 5409),
@@ -355,16 +360,18 @@ df = df.drop_duplicates().reset_index(drop=True)
 df['Valor Base Cálculo ICMS ST Retido Operação Anterior'] = df['Valor Base Cálculo ICMS ST Retido Operação Anterior'].fillna(
     0)
 
-try: 
-    df['Valor ICMS Substituição Tributária'] = df['Valor ICMS Substituição Tributária'].astype(float).fillna(0)
+try:
+    df['Valor ICMS Substituição Tributária'] = df['Valor ICMS Substituição Tributária'].astype(
+        float).fillna(0)
 except:
     df['Valor ICMS Substituição Tributária'] = df['Valor ICMS Substituição Tributária'].astype(str).str.replace(
         '.', '').str.replace(
             ',', '.').str.replace('R$ ', '').str.strip().astype(
         float).fillna(0)
-    
+
 df['Valor ICMS Operação'] = df['Valor ICMS Operação'].astype(float).fillna(0)
-df['Valor ICMS ST Retido'] = df['Valor ICMS ST Retido'].astype(str).str.replace(',', '.').astype(float).fillna(0)
+df['Valor ICMS ST Retido'] = df['Valor ICMS ST Retido'].astype(
+    str).str.replace(',', '.').astype(float).fillna(0)
 df['Valor ICMS Substituto'] = df['Valor ICMS Substituto'].astype(str).str.replace(',', '.').astype(
     float).fillna(0)
 df['icms'] = df['icms'].astype(str).replace('None', np.nan)
@@ -416,7 +423,8 @@ tabela_2['MVA'] = df_merged['mva_antes'].astype(str).replace(
 
 # Preenchimento das colunas QTD_NOTA, QTD_CAT e QTD_EFD
 
-tabela_2['QTD_NOTA'] = df['Quantidade Comercial'].astype(str).str.replace(',', '.').astype(float)
+tabela_2['QTD_NOTA'] = df['Quantidade Comercial'].astype(
+    str).str.replace(',', '.').astype(float)
 tabela_2['QTD_CAT'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)) & (~df['CFOP'].astype(float).isin([5202, 6202, 5409, 5411])),
                                df['quantidade'], df['Quantidade Comercial'])
 tabela_2['QTD_CAT'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)) & (df['CFOP'].astype(float).isin([5405, 5152])) & (df['cfop'].astype(float) == 1409),
@@ -473,8 +481,9 @@ if nome_empresa == 'mensa':
                               how='left').drop_duplicates().reset_index(drop=True)
     print('Tamanho tabela 2 pós-merge:', tabela_2.shape)
     tabela_2['fator'] = tabela_2['fator'].fillna(1)
-    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'saida') | ((tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)) & (tabela_2['FONTE']=='entrada')),
-                                   tabela_2['fator'].astype(float) * tabela_2['QTD_NOTA'].astype(float),
+    tabela_2['QTD_CAT'] = np.where((tabela_2['FONTE'] == 'saida') | ((tabela_2['CHV_DOC'].str.slice(6, 20).isin(cnpjs)) & (tabela_2['FONTE'] == 'entrada')),
+                                   tabela_2['fator'].astype(
+                                       float) * tabela_2['QTD_NOTA'].astype(float),
                                    tabela_2['QTD_EFD'].astype(float))
 
     tabela_2 = tabela_2[tabela_2_cols]
@@ -515,21 +524,21 @@ cfops = [1102, 1202, 1403, 1409, 1411,
          6411, 6414, 6556, 6910,
          6911, 6922, 6923,
          1117, 1118, 1152, 1652, 1659,
-        1661, 1662, 1664, 1922,
-        1923, 1949, 2659, 2923,
-        5655, 5656, 5659, 5661,
-        5663, 5665, 5921, 5927,
-        5934, 5949, 6655, 6656,
-        6659]
+         1661, 1662, 1664, 1922,
+         1923, 1949, 2659, 2923,
+         5655, 5656, 5659, 5661,
+         5663, 5665, 5921, 5927,
+         5934, 5949, 6655, 6656,
+         6659]
 
 
-# tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)) & (tabela_2['CEST'].notnull()),
-#                                  1,
-#                                  0)
-
-tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)),
+tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)) & (tabela_2['CEST'].notnull()),
                                  1,
-                                 0)  # a ser usado para a empresa Tobras
+                                 0)
+
+# tabela_2['Entr_PCAT'] = np.where((tabela_2['CFOP'].astype(int).isin(cfops)),
+#                                  1,
+#                                  0)  # a ser usado para a empresa Tobras
 
 print('Linhas da tabela 2:', tabela_2.shape[0])
 # Preenchimento das colunas CNPJ EMITENTE e CNPJ DESTINATARIO
@@ -540,7 +549,7 @@ tabela_2['CNPJ DESTINATARIO'] = df['Número CNPJ Destinatário']
 # Preenchimento da coluna IND_OPER
 
 tabela_2['IND_OPER'] = np.where((tabela_2['FONTE'] == 'saida'),
-                                   1, 0)
+                                1, 0)
 
 # Preenchimento da coluna VALOR
 tabela_2['VALOR'] = df['Valor Produto ou Serviço'].astype(
@@ -622,7 +631,8 @@ tabela_2['ICMS_TOT'] = np.where(
 )
 
 cond_1 = tabela_2['CFOP'].astype(int).isin([1102, 2102, 1664, 1922])
-cond_2 = (tabela_2['CST'].astype(str).str.replace(',', '.').astype(float) != 60) & (tabela_2['CFOP'].astype(int).isin([1949]))
+cond_2 = (tabela_2['CST'].astype(str).str.replace(',', '.').astype(
+    float) != 60) & (tabela_2['CFOP'].astype(int).isin([1949]))
 
 tabela_2['ICMS_TOT'] = np.where(cond_1 | cond_2,
                                 np.nan,
@@ -678,10 +688,11 @@ tabela_2['SUB_TIPO'] = tabela_2['SUB_TIPO'].astype(int)
 
 conditions = [
     (tabela_2['CST'] == 40) & (tabela_2['IND_OPER'] == 1),
-    tabela_2['CFOP'].isin([2411, 6102, 6152, 6404, 6409, 6108, 6117, 6655, 6656, 6659]),
+    tabela_2['CFOP'].isin([2411, 6102, 6152, 6404, 6409,
+                          6108, 6117, 6655, 6656, 6659]),
     tabela_2['CFOP'].isin([1202, 2202, 5102, 5152, 5201, 5210, 5409,
                            5410, 5413, 5556, 5910, 5922,
-                           5949, 6202, 6922, 6403, 6910, 
+                           5949, 6202, 6922, 6403, 6910,
                            1661, 1662, 5659, 5663, 5934,
                            5655, 5665]),
     (tabela_2['CFOP'] == 5927),
@@ -713,14 +724,14 @@ tabela_2['VL_CONFR_0'] = np.where(tabela_2['COD_LEGAL'] == 0,
 
 if nome_empresa == 'tobras':
     conditions = [tabela_2['COD_ITEM'].astype(int).isin([100302]),
-              tabela_2['COD_ITEM'].astype(int).isin([100101]),
-              tabela_2['COD_ITEM'].astype(int).isin([100203, 100206])]
+                  tabela_2['COD_ITEM'].astype(int).isin([100101]),
+                  tabela_2['COD_ITEM'].astype(int).isin([100203, 100206])]
 
     values = [np.where(('2021-01-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2023-01-15'), 13.3, 12),
-            np.where(('2021-01-15' <= tabela_2['DATA']) &
-                    (tabela_2['DATA'] <= '2022-06-27'), 25, 18),
-            np.where(('2021-01-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2022-07-14'), 13.3,
-                    np.where(('2022-07-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2023-06-30'),
+              np.where(('2021-01-15' <= tabela_2['DATA']) &
+                       (tabela_2['DATA'] <= '2022-06-27'), 25, 18),
+              np.where(('2021-01-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2022-07-14'), 13.3,
+                       np.where(('2022-07-15' <= tabela_2['DATA']) & (tabela_2['DATA'] <= '2023-06-30'),
                                 9.57,
                                 12))]
 # else:
@@ -733,8 +744,10 @@ if nome_empresa == 'tobras':
 
 tabela_2 = tabela_2[(tabela_2['QTD_NOTA'] != 'nan') &
                     (tabela_2['QTD_NOTA'].astype(float) > 0)]
-tabela_2['QTD_NOTA'] = tabela_2['QTD_NOTA'].astype(str).str.replace(',', '.').astype(float)
-tabela_2['QTD_CAT'] = tabela_2['QTD_CAT'].astype(str).str.replace(',', '.').astype(float)
+tabela_2['QTD_NOTA'] = tabela_2['QTD_NOTA'].astype(
+    str).str.replace(',', '.').astype(float)
+tabela_2['QTD_CAT'] = tabela_2['QTD_CAT'].astype(
+    str).str.replace(',', '.').astype(float)
 tabela_2['CHECAGEM'] = (tabela_2['QTD_CAT']/tabela_2['QTD_NOTA']).round(3)
 
 # Geração de tabela para checagem de erro em fator de conversão
@@ -753,7 +766,7 @@ cod_items_with_multiple_values = pivot_table[pivot_table['CHECAGEM'] > 1]['COD_I
 #     sys.exit()
 
 # data = tabela_2['DATA'].astype(str).iloc[0][:4]
-tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01') & (tabela_2['DATA'] <= '2020-12-31')]
+tabela_2 = tabela_2[(tabela_2['DATA'] >= '2020-01-01')]
 tabela_2_filt = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'MVA',
                           'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'QTD_EFD', 'ICMS_TOT', 'ICMS_TOT_SAIDA', 'VL_CONFR_0', 'COD_LEGAL',
                           'ALIQUOTA', 'VALOR', 'Valor Base Cálculo ICMS ST Retido Operação Anterior',
