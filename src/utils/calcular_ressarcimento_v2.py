@@ -220,12 +220,26 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
     for produto in list(produtos_somente_saida) + list(prods_icms_0['COD_ITEM'].unique()) + list(prods_icms_ini_igual_op['COD_ITEM'].unique()):
         # for produto in data['COD_ITEM'].unique():
         # Executa a consulta para obter os valores mva_antes e mva_depois
-        query = f"SELECT mva_antes, mva_depois FROM produtos WHERE codigo_produto = '{produto}'"
         try:
-            mva = float(pd.read_sql_query(
-                query, engine).dropna(axis=1).iloc[0, 0])
+            query = f"""
+                    SELECT mva, data_final
+                    FROM public.produtos_polipet
+                    WHERE codigo_produto = {produto} 
+                    ORDER BY TO_DATE(data_final, 'DD/MM/YYYY') DESC
+                    LIMIT 1;
+                    """
+            try:
+                dados = pd.read_sql_query(query, engine)
+                mva = dados['mva']
+            except:
+                mva = 0
         except:
-            mva = 0
+            query = f"SELECT mva_antes, mva_depois FROM produtos WHERE codigo_produto = '{produto}'"
+            try:
+                mva = float(pd.read_sql_query(
+                    query, engine).dropna(axis=1).iloc[0, 0])
+            except:
+                mva = 0
         # print('MVA: ', mva)
         # Calcula o lucro e a quantidade total
         lucro = sum(ficha_3[(ficha_3['COD_ITEM'] == produto) & (

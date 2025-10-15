@@ -51,13 +51,17 @@ if nome_empresa.lower() == 'tobras':
     cnpj = "05759383002062"
     cnpjs = [cnpj]
 
+if nome_empresa.lower() == 'morikawa':
+    cnpj = "05886844000286"
+    cnpjs= []
+
 engine = create_engine(
-    f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:3361/{os.getenv('DATABASE_NAME')}",
+    f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:5432/{os.getenv('DATABASE_NAME')}",
     pool_recycle=1800
 )
 
 # Variáveis para acesso ao s3
-bucket_name = 'revizia'
+bucket_name = '4btech'
 
 s3 = boto3.client('s3',
                   aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -69,24 +73,20 @@ print("✅ Cliente S3 autenticado com sucesso!")
 
 # Leitura da tabela 1 gerada em etapa anterior
 tabela_1 = ler_arquivo_para_dataframe(
-    bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 1/tabela_1_{nome_empresa}.csv', file_type='csv', sep=';')
-
-# tabela_1 = tabela_1[['Chave Acesso NFe', 'Tipo', 'Data Emissão', 'Número Item',
-#        'Código Produto ou Serviço', 'Descrição Produto', 'CFOP',
-#        'Quantidade Comercial', 'Unidade Comercial', 'Valor Produto ou Serviço',
-#        'Valor Desconto Incondicional', 'Valor Total NFE do Produto',
-#        'Código GTIN', 'Código NCM', 'CEST', 'Número CNPJ Emitente',
-#        'Número CNPJ Destinatário', 'Valor Total IPI', 'CST ICMS',
-#        'Valor ICMS Operação', 'Valor ICMS Substituição Tributária',
-#        'Valor Base Cálculo ICMS Substituição Tributária',
-#        'Valor Base de Cálculo ICMS ST Retido', 'Valor ICMS Substituto',
-#        'Valor ICMS ST Retido']]
+    bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 1/tabela_1_{cnpj}.csv', file_type='csv', sep=',')
 
 tabela_1 = tabela_1.dropna(subset='Número Item')
 tabela_1 = tabela_1.drop_duplicates()
 
 tabela_1['Código Produto ou Serviço'] = tabela_1['Código Produto ou Serviço'].astype(
     str)
+
+tabela_1.rename(columns={
+    'Valor Base Cálculo ICMS ST Retido Operação Anterior': 'Valor Base de Cálculo ICMS ST Retido',
+    'Valor ICMS ST Retido Operação Anterior': 'Valor ICMS ST Retido'
+}, inplace=True)
+
+
 tabela_1['Data Emissão'] = pd.to_datetime(
     tabela_1['Data Emissão'].str.slice(0, 10), format='mixed')
 
@@ -122,7 +122,7 @@ if efd.shape[0] == 0:
 
 # Alteração do tipo de dado
 
-efd['codigo_do_item'] = efd['codigo_do_item'].astype(float)
+efd['codigo_do_item'] = efd['codigo_do_item'].astype(str).replace('', np.nan).astype(float)
 
 # Leitura da tabela da efd_mod59 para um data frame
 
@@ -157,7 +157,7 @@ tabela_1['Data Emissão'] = pd.to_datetime(
     tabela_1['Data Emissão'], format='mixed')
 
 # Formatação da coluna Valor Produto ou Serviço para o tipo correto
-tabela_1['Valor Produto ou Serviço'] = tabela_1['Valor Produto ou Serviço'].astype(str).str.replace(',', '.').astype(
+tabela_1['Valor Produto ou Serviço'] = tabela_1['Valor Produto ou Serviço'].astype(str).str.replace('.', '').str.replace(',', '.').astype(
     float)
 
 # Preenchimento da coluna bc_complementar_total_complementar
@@ -271,20 +271,46 @@ if nome_empresa == 'tobras':
     # alteração do tipo de dado da coluna de acordo com o necessário
     produtos['codigo_produto'] = produtos['codigo_produto'].astype(str)
     produtos['icms'] = produtos['icms'].str.replace(',', '.').astype(float)*100
+
+elif nome_empresa == 'morikawa':
+    # leitura do arquivo com as informações
+    query = '''
+    SELECT ncm, cest, codigo_produto, descricao, mva, icms, data_inicio, data_final, ano FROM produtos_polipet;
+    '''
+    produtos = pd.read_sql_query(query, engine)
+
+    # adição de colunas com informações nulas
+    produtos['empresa'] = np.nan
+    produtos['anvisa'] = np.nan
+    produtos['mva_antes'] = np.nan
+    produtos['mva_depois'] = np.nan
+    produtos['data_valida'] = np.nan
+
+    produtos['data_inicio'] = pd.to_datetime(produtos['data_inicio'], format='%d/%m/%Y')
+    produtos['data_final'] = pd.to_datetime(produtos['data_final'], format='%d/%m/%Y')
+
+    # renomeação das colunas
+    produtos.rename(columns={
+        'aliquota': 'icms'
+    }, inplace=True)
+
+    # alteração do tipo de dado da coluna de acordo com o necessário
+    produtos['codigo_produto'] = produtos['codigo_produto'].astype(str)
+
 else:
     query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
     produtos = pd.read_sql_query(query, engine)
 
 # Checagem de erro em relação à duplicidade de aliquota na tabela de produtos
 
-mask = produtos.groupby('codigo_produto')['icms'].transform('nunique') > 1
+# mask = produtos.groupby('codigo_produto')['icms'].transform('nunique') > 1
 
-# Filtrar as linhas que atendem à condição
-result = produtos[mask]
-result = result.sort_values(by='codigo_produto')
-if result.shape[0] > 0:
-    print('❌DUPLICAÇÃO DE ALIQUOTA NA TABELA DE PRODUTOS, FAVOR CHECAR')
-    sys.exit()
+# # Filtrar as linhas que atendem à condição
+# result = produtos[mask]
+# result = result.sort_values(by='codigo_produto')
+# if result.shape[0] > 0:
+#     print('❌DUPLICAÇÃO DE ALIQUOTA NA TABELA DE PRODUTOS, FAVOR CHECAR')
+#     sys.exit()
 
 # Ajustes de dados e definição de informações para aplicação da regras de
 # filtragem dos dados presentes na efd
@@ -326,9 +352,23 @@ merged_novo['Produto'] = np.where((merged_novo['Tipo'] == 'entrada') & (~merged_
                                   merged_novo['codigo_produto'], merged_novo['Código Produto ou Serviço'])
 merged_novo['Produto'] = merged_novo['Produto'].astype(str)
 
-df_merged = pd.merge(merged_novo, produtos[['codigo_produto', 'icms', 'cest', 'mva_antes']],
-                     left_on=['Produto'], right_on=['codigo_produto'],
-                     how='left')
+if nome_empresa == 'morikawa':
+    df_merged = pd.merge(merged_novo, produtos,
+                        left_on=['Produto'], right_on=['codigo_produto'],
+                        how='left').drop_duplicates()
+    
+    df_merged = df_merged[
+        (df_merged['Data Emissão'] >= df_merged['data_inicio']) &
+        (df_merged['Data Emissão'] <= df_merged['data_final'])
+    ]
+
+    df_merged['mva_antes'] = df_merged['mva']
+    df_merged.drop('ncm_x', axis=1, inplace=True)
+    df_merged.rename(columns={'ncm_y': 'ncm'}, inplace=True)
+else:
+    df_merged = pd.merge(merged_novo, produtos[['codigo_produto', 'icms', 'cest', 'mva_antes']],
+                        left_on=['Produto'], right_on=['codigo_produto'],
+                        how='left')
 
 
 # Checagem de duplicação de chave-item
@@ -371,8 +411,8 @@ except:
 
 df['Valor ICMS Operação'] = df['Valor ICMS Operação'].astype(float).fillna(0)
 df['Valor ICMS ST Retido'] = df['Valor ICMS ST Retido'].astype(
-    str).str.replace(',', '.').astype(float).fillna(0)
-df['Valor ICMS Substituto'] = df['Valor ICMS Substituto'].astype(str).str.replace(',', '.').astype(
+    str).str.replace('.', '').str.replace(',', '.').astype(float).fillna(0)
+df['Valor ICMS Substituto'] = df['Valor ICMS Substituto'].astype(str).str.replace('.', '').str.replace(',', '.').astype(
     float).fillna(0)
 df['icms'] = df['icms'].astype(str).replace('None', np.nan)
 

@@ -23,7 +23,7 @@ dotenv_path = os.path.abspath(os.path.join(
 print(f"Carregando .env de: {dotenv_path}")
 load_dotenv(dotenv_path, override=True)
 
-bucket_name = 'revizia'
+bucket_name = '4btech'
 
 s3 = boto3.client('s3',
                   aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -60,6 +60,11 @@ if nome_empresa.lower() == 'casa mimosa':
 
 if nome_empresa.lower() == 'tobras':
     cnpj = "05759383002062"
+    cnpj_produtos = None
+    cnpjs = [cnpj]
+
+if nome_empresa.lower() == 'morikawa':
+    cnpj = "05886844000286"
     cnpj_produtos = None
     cnpjs = [cnpj]
 

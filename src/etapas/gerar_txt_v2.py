@@ -47,7 +47,7 @@ if nome_empresa.lower() == 'casa mimosa':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'tobras':
-    cnpj = "05759383001686"
+    cnpj = "05886844000286"
     cnpjs = [cnpj]
 
 connection = psycopg2.connect(
