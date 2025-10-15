@@ -22,7 +22,7 @@ print(f"Carregando .env de: {dotenv_path}")
 load_dotenv(dotenv_path, override=True)
 
 engine = create_engine(
-    f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:3361/{os.getenv('DATABASE_NAME')}"
+    f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:5432/{os.getenv('DATABASE_NAME')}"
 )
 
 
