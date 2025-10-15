@@ -46,7 +46,8 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
 
     if cnpj_produtos == None:
         # leitura do arquivo com as informações
-        produtos = pd.read_excel('C:/Users/vinic/Downloads/TABELA DE PRODUTOS_TOBRAS_ATUALIZADA.xlsx')
+        produtos = pd.read_excel(
+            'C:/Users/vinic/Downloads/TABELA DE PRODUTOS_TOBRAS_ATUALIZADA.xlsx')
 
         # adição de colunas com informações nulas
         produtos['empresa'] = np.nan
@@ -71,6 +72,16 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
         produtos['codigo_produto'] = produtos['codigo_produto'].astype(str)
         produtos['icms'] = produtos['icms'].str.replace(
             ',', '.').astype(float)*100
+
+    elif cnpj_produtos == "05886844000286":
+        query = f"""
+                    SELECT mva as mva_antes, codigo_produto, data_final
+                    FROM public.produtos_polipet
+                    ORDER BY TO_DATE(data_final, 'DD/MM/YYYY') DESC
+                    LIMIT 1;
+                    """
+        produtos = pd.read_sql_query(query, engine)
+
     else:
         query = f"SELECT * FROM produtos where empresa = '{cnpj_produtos}'"
         produtos = pd.read_sql_query(query, engine)
@@ -195,7 +206,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
             valor_unitario = df_cod[df_cod['ICMS_TOT_0'].fillna(
                 0) != 0]['VALOR_UNIT'].values[0]
             valor_op_unitario = df_cod[(df_cod['Valor ICMS Operação'].fillna(
-            0) != 0) & (df_cod['IND_OPER'] == 0)]['VALOR_OP_UNIT'].values[0]
+                0) != 0) & (df_cod['IND_OPER'] == 0)]['VALOR_OP_UNIT'].values[0]
         except:
             valor_unitario = 0
             valor_op_unitario = 0
@@ -346,7 +357,8 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
                         num = row['valor_op_fixo'] + 0 + row['ICMS_OP_INI']
                     else:
                         num = row['valor_op_fixo'] + \
-                            row['Valor ICMS Operação'] + subset.iloc[0]['ICMS_OP_INI']
+                            row['Valor ICMS Operação'] + \
+                            subset.iloc[0]['ICMS_OP_INI']
                     den = row['qtd_fixa'] + row['QTD_CAT'] + \
                         subset.iloc[0]['QTD_INI']
                     valor_medio.append(num / den)

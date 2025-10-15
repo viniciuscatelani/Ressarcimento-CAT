@@ -65,7 +65,7 @@ if nome_empresa.lower() == 'tobras':
 
 if nome_empresa.lower() == 'morikawa':
     cnpj = "05886844000286"
-    cnpj_produtos = None
+    cnpj_produtos = "05886844000286"
     cnpjs = [cnpj]
 
 try:
