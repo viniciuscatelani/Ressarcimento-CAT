@@ -52,7 +52,7 @@ if nome_empresa.lower() == 'tobras':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'morikawa':
-    cnpj = "05886844001096"
+    cnpj = "05886844001681"
     cnpjs= [cnpj]
 
 engine = create_engine(
