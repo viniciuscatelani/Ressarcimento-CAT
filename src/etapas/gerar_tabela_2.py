@@ -126,7 +126,7 @@ efd['codigo_do_item'] = efd['codigo_do_item'].astype(str).replace('', np.nan).as
 
 # Leitura da tabela da efd_mod59 para um data frame
 
-query = f"SELECT * FROM modelo59 WHERE modelo59.cnpj = '{cnpj}';"
+query = f"SELECT * FROM modelo59 WHERE cnpj = '{cnpj}';"
 
 empresa_sem_mod59 = ['ladakh', 'mensa', 'tobras']
 efd_mod59 = pd.read_sql_query(query, engine)
