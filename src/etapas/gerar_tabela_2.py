@@ -52,8 +52,8 @@ if nome_empresa.lower() == 'tobras':
     cnpjs = [cnpj]
 
 if nome_empresa.lower() == 'morikawa':
-    cnpj = "05886844000286"
-    cnpjs= []
+    cnpj = "05886844001096"
+    cnpjs= [cnpj]
 
 engine = create_engine(
     f"postgresql+psycopg2://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASS')}@{os.getenv('DATABASE_HOST')}:5432/{os.getenv('DATABASE_NAME')}",
