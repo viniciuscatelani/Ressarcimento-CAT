@@ -288,8 +288,8 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
             # print('Valor unitario: ', valor_unit)
             base_st_estimada = valor_unit + (valor_unit * mva)
             # print('Base estimada: ', base_st_estimada)
-            icms_op_unit = valor_unit * aliquota
-            icms_suport_unit = base_st_estimada * aliquota
+            icms_op_unit = valor_unit
+            icms_suport_unit = base_st_estimada
             # print('Icms suportado unitario: ', icms_suport_unit)
             icms_inicial = icms_suport_unit * qtde_inicial
             # print('ICMS Inicial: ', icms_inicial)
