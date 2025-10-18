@@ -90,6 +90,8 @@ tabela_1.rename(columns={
 tabela_1['Data Emissão'] = pd.to_datetime(
     tabela_1['Data Emissão'].str.slice(0, 10), format='mixed')
 
+tabela_1 = tabela_1[(tabela_1['Data Emissão'] >= '2020-01-01') & (tabela_1['Data Emissão'] <= '2020-12-31')]
+
 uso_complementar = input('Haverá uso de nota complementar ? ')
 
 # Leitura do arquivo da complementar
@@ -465,7 +467,7 @@ tabela_2['MVA'] = df['mva_antes'].astype(str).replace(
 
 tabela_2['QTD_NOTA'] = df['Quantidade Comercial'].astype(
     str).str.replace(',', '.').astype(float)
-tabela_2['QTD_CAT'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)) & (~df['CFOP'].astype(float).isin([5202, 6202, 5409, 5411])),
+tabela_2['QTD_CAT'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)) & (~df['CFOP'].astype(float).isin([5202, 6202, 5411])),
                                df['quantidade'], df['Quantidade Comercial'])
 tabela_2['QTD_CAT'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso NFe'].str.slice(6, 20).isin(cnpjs)) & (df['CFOP'].astype(float).isin([5405, 5152])) & (df['cfop'].astype(float) == 1409),
                                df['Quantidade Comercial'],
@@ -865,15 +867,15 @@ if tabela_2_final.shape[0] > 1000000:
 
     salvar_dataframe_no_s3(tabela_2_final_p1,
                            bucket_name,
-                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
+                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_2020_p1.xlsx', file_type='xlsx')
     salvar_dataframe_no_s3(tabela_2_final_p2,
                            bucket_name,
-                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
+                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_2020_p2.xlsx', file_type='xlsx')
     salvar_dataframe_no_s3(tabela_2_final_p3,
                            bucket_name,
-                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
+                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_2020_p3.xlsx', file_type='xlsx')
 
 else:
     salvar_dataframe_no_s3(tabela_2_final,
                            bucket_name,
-                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+                           s3_key=f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_2020.xlsx', file_type='xlsx')

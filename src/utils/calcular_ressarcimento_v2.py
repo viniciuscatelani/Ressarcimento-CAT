@@ -74,12 +74,29 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
             ',', '.').astype(float)*100
 
     elif cnpj_produtos == "05886844000286":
-        query = f"""
-                    SELECT mva as mva_antes, codigo_produto, data_final
-                    FROM public.produtos_polipet
-                    ORDER BY TO_DATE(data_final, 'DD/MM/YYYY') DESC
-                    LIMIT 1;
-                    """
+        query = """
+                SELECT
+                    mva_antes,
+                    codigo_produto,
+                    data_final
+                FROM
+                    (
+                        SELECT
+                            mva AS mva_antes,
+                            codigo_produto,
+                            data_final,
+                            -- Atribui um número de linha para cada produto, ordenado pela data_final mais recente (DESC)
+                            ROW_NUMBER() OVER (
+                                PARTITION BY codigo_produto
+                                ORDER BY TO_DATE(data_final, 'DD/MM/YYYY') DESC
+                            ) AS rn
+                        FROM
+                            public.produtos_polipet
+                        -- É vital que as colunas de data sejam convertidas, como fizemos na consulta anterior
+                    ) AS subquery
+                WHERE
+                    rn = 1; -- Filtra apenas o registro com o número 1, que é o mais recente para cada produto
+            """
         produtos = pd.read_sql_query(query, engine)
 
     else:

@@ -70,15 +70,15 @@ if nome_empresa.lower() == 'morikawa':
 
 try:
     tabela_2 = ler_arquivo_para_dataframe(
-        bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}.xlsx', file_type='xlsx')
+        bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_2020.xlsx', file_type='xlsx')
 
 except:
     tabela_2_p1 = ler_arquivo_para_dataframe(
-        bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p1.xlsx', file_type='xlsx')
+        bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_2020_p1.xlsx', file_type='xlsx')
     tabela_2_p2 = ler_arquivo_para_dataframe(
-        bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p2.xlsx', file_type='xlsx')
+        bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_2020_p2.xlsx', file_type='xlsx')
     tabela_2_p3 = ler_arquivo_para_dataframe(
-        bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_p3.xlsx', file_type='xlsx')
+        bucket_name, f'Ressarcimento/{nome_empresa.title()}/Tabela 2/tabela_2_{nome_empresa.title()}_{cnpj}_2020_p3.xlsx', file_type='xlsx')
 
     tabela_2 = pd.concat([tabela_2_p1, tabela_2_p2, tabela_2_p3])
 
