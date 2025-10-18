@@ -457,7 +457,7 @@ tabela_2['COD_ITEM'] = np.where((df['Tipo'] == 'entrada') & (~df['Chave Acesso N
                                 df['Produto'],
                                 tabela_2['COD_ITEM'])
 
-tabela_2['MVA'] = df_merged['mva_antes'].astype(str).replace(
+tabela_2['MVA'] = df['mva_antes'].astype(str).replace(
     '-', np.nan).replace('None', np.nan).astype(float)
 
 
