@@ -127,26 +127,13 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
     ficha_3['MVA'] = ficha_3['MVA'].astype(str).replace(
         '-', np.nan).replace('None', np.nan).astype(float)
 
-    cond_1 = ((ficha_3['CST'].astype(float) == 60) & (
-        (ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
-    cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411, 1202, 2202])) & (
-        (ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
-
-    ficha_3['ICMS_TOT'] = np.where(cond_1 | cond_2,
-                                   (ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100)
-                                    ) * (ficha_3['MVA'] + 1),
-                                   ficha_3['ICMS_TOT'])
-
-    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 2102, 1664])) | (ficha_3['IND_OPER'] == 1),
-                                   np.nan,
-                                   ficha_3['ICMS_TOT'])
-
     # ficha_3['ICMS_TOT_SAIDA'] = np.where((ficha_3['IND_OPER'] == 1) & (),
     #                                      (ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100)) * (ficha_3['MVA'] + 1),
     #                                      np.nan)
 
     cond_1 = ((ficha_3['CST'].astype(float) == 60) & (
         (ficha_3['Valor ICMS Operação'] == 0) | (ficha_3['Valor ICMS Operação'].isnull())))
+    
     cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])) & (
         (ficha_3['Valor ICMS Operação'] == 0) | (ficha_3['Valor ICMS Operação'].isnull())))
 
@@ -158,6 +145,21 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
     ficha_3['Valor ICMS Operação'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 2102])) | ((ficha_3['CFOP'].astype(float).isin([1202, 2202])) & (ficha_3['CST'] != 60)),
                                               np.nan,
                                               ficha_3['Valor ICMS Operação'])
+    
+    cond_1 = ((ficha_3['CST'].astype(float) == 60) & (
+        (ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
+    
+    cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411, 1202, 2202])) & (
+        (ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
+
+    ficha_3['ICMS_TOT'] = np.where(cond_1 | cond_2,
+                                   (ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100)
+                                    ) * (ficha_3['MVA']) + ficha_3['Valor ICMS Operação'],
+                                   ficha_3['ICMS_TOT'])
+
+    ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 2102, 1664])) | (ficha_3['IND_OPER'] == 1),
+                                   np.nan,
+                                   ficha_3['ICMS_TOT'])
 
     data = ficha_3[['COD_ITEM', 'DATA', 'QTD_CAT', 'IND_OPER', 'CFOP']]
 
