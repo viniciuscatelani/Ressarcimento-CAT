@@ -42,7 +42,7 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
     tabela_2['QTD_CAT'] = tabela_2['QTD_CAT'].astype(float)
 
     ficha_3 = tabela_2[['CHV_DOC', 'DATA', 'CFOP', 'NUM_ITEM', 'COD_ITEM', 'IND_OPER', 'SUB_TIPO', 'QTD_CAT', 'Valor ICMS Operação',
-                        'CST', 'ALIQUOTA', 'DESCRICAO', 'N C M', 'FONTE']]
+                        'Valor ICMS Substituiução Tributária', 'CST', 'ALIQUOTA', 'DESCRICAO', 'N C M', 'FONTE']]
 
     if cnpj_produtos == None:
         # leitura do arquivo com as informações
@@ -133,9 +133,12 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
 
     cond_1 = ((ficha_3['CST'].astype(float) == 60) & (
         (ficha_3['Valor ICMS Operação'] == 0) | (ficha_3['Valor ICMS Operação'].isnull())))
-    
     cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411])) & (
         (ficha_3['Valor ICMS Operação'] == 0) | (ficha_3['Valor ICMS Operação'].isnull())))
+
+    ficha_3['ICMS Operação Alterado'] = np.where(cond_1 | cond_2,
+                                                 1,
+                                                 0)
 
     ficha_3['Valor ICMS Operação'] = np.where(cond_1 | cond_2,
                                               (ficha_3['ALIQUOTA'].astype(
@@ -145,16 +148,19 @@ def calcular_ressarcimento(tabela_2, cnpj_produtos=None):
     ficha_3['Valor ICMS Operação'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 2102])) | ((ficha_3['CFOP'].astype(float).isin([1202, 2202])) & (ficha_3['CST'] != 60)),
                                               np.nan,
                                               ficha_3['Valor ICMS Operação'])
-    
+
     cond_1 = ((ficha_3['CST'].astype(float) == 60) & (
         (ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
-    
     cond_2 = ((ficha_3['CFOP'].isin([1403, 1409, 1411, 1949, 2403, 2411, 1202, 2202])) & (
         (ficha_3['ICMS_TOT'] == 0) | (ficha_3['ICMS_TOT'].isnull())))
+    cond_3 = (ficha_3['Valor ICMS Operação'] != 0) & (
+        ficha_3['Valor ICMS Substituição Tributária'] == 0)
+    cond_4 = (ficha_3['ICMS Operação Alterado'] == 1) & (
+        ficha_3['Valor ICMS Substituição Tributária'] != 0)
 
-    ficha_3['ICMS_TOT'] = np.where(cond_1 | cond_2,
+    ficha_3['ICMS_TOT'] = np.where(cond_1 | cond_2 | cond_3 | cond_4,
                                    (ficha_3['VALOR'] * (ficha_3['ALIQUOTA'] / 100)
-                                    ) * (ficha_3['MVA']) + ficha_3['Valor ICMS Operação'],
+                                    ) * (ficha_3['MVA'] + 1),
                                    ficha_3['ICMS_TOT'])
 
     ficha_3['ICMS_TOT'] = np.where((ficha_3['CFOP'].astype(float).isin([1102, 2102, 1664])) | (ficha_3['IND_OPER'] == 1),
